@@ -1,8 +1,8 @@
 package com.example.mogakserver.auth.application.service;
 
+import com.example.mogakserver.auth.application.request.SignUpRequestDto;
 import com.example.mogakserver.auth.application.response.LoginResponseDto;
 import com.example.mogakserver.common.exception.dto.TokenPair;
-import com.example.mogakserver.common.exception.model.NotFoundUserException;
 import com.example.mogakserver.common.config.jwt.JwtService;
 import com.example.mogakserver.external.kakao.service.KakaoSocialService;
 import com.example.mogakserver.user.domain.entity.User;
@@ -26,15 +26,39 @@ public class AuthService {
         Optional<User> user = userRepository.findByKakaoId(kakaoId);
 
         if (user.isEmpty()) {
-            User newUser = User.builder()
-                    .kakaoId(kakaoId)
-                    .build();
-            userRepository.save(newUser);
-
-            TokenPair tokenPair = jwtService.generateTokenPair(String.valueOf(newUser.getId()));
-            throw new NotFoundUserException(USER_NOT_FOUND_EXCEPTION, tokenPair);
+            TokenPair tokenPair = jwtService.generateTokenPair(String.valueOf(kakaoId));
+            return new LoginResponseDto(
+                    kakaoId,
+                    tokenPair.accessToken(),
+                    tokenPair.refreshToken(),
+                    true
+            );
         }
+
         TokenPair tokenPair = jwtService.generateTokenPair(String.valueOf(user.get().getId()));
-        return new LoginResponseDto(tokenPair.accessToken(), tokenPair.refreshToken());
+        return new LoginResponseDto(
+                user.get().getId(),
+                tokenPair.accessToken(),
+                tokenPair.refreshToken(),
+                false
+        );
+    }
+
+    public LoginResponseDto signUp(SignUpRequestDto signUpRequest) {
+        User newUser = User.builder()
+                .kakaoId(signUpRequest.kakaoId())
+                .nickName(signUpRequest.nickName())
+                .portfolioUrl(signUpRequest.portfolioUrl())
+                .build();
+        userRepository.save(newUser);
+
+        TokenPair tokenPair = jwtService.generateTokenPair(String.valueOf(newUser.getId()));
+
+        return new LoginResponseDto(
+                newUser.getId(),
+                tokenPair.accessToken(),
+                tokenPair.refreshToken(),
+                true
+        );
     }
 }

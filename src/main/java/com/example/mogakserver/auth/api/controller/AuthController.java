@@ -1,15 +1,18 @@
 package com.example.mogakserver.auth.api.controller;
 
+import com.example.mogakserver.auth.application.request.SignUpRequestDto;
 import com.example.mogakserver.common.exception.dto.SuccessResponse;
 import com.example.mogakserver.common.config.resolver.kakao.KakaoCode;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.example.mogakserver.auth.application.response.LoginResponseDto;
 import com.example.mogakserver.auth.application.service.AuthService;
 
+import static com.example.mogakserver.common.exception.enums.SuccessCode.SIGNUP_SUCCESS;
 import static com.example.mogakserver.common.exception.enums.SuccessCode.SOCIAL_LOGIN_SUCCESS;
 
 @RestController
@@ -25,7 +28,18 @@ public class AuthController {
             @KakaoCode String kakaoCode,
             HttpServletRequest request) {
         String originHeader = request.getHeader(ORIGIN);
-        return SuccessResponse.success(SOCIAL_LOGIN_SUCCESS, authService.login(originHeader, kakaoCode));
+        LoginResponseDto responseDto = authService.login(originHeader, kakaoCode);
+
+        if (responseDto.isNewUser()) {
+            return SuccessResponse.success(SIGNUP_SUCCESS, responseDto);
+        }
+        return SuccessResponse.success(SOCIAL_LOGIN_SUCCESS, responseDto);
+    }
+
+    @PostMapping("/signup")
+    public SuccessResponse<LoginResponseDto> signUp(
+            @RequestBody SignUpRequestDto signUpRequest) {
+        return SuccessResponse.success(SOCIAL_LOGIN_SUCCESS, authService.signUp(signUpRequest));
     }
 }
 
