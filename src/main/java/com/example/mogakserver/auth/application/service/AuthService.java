@@ -1,9 +1,12 @@
 package com.example.mogakserver.auth.application.service;
 
 import com.example.mogakserver.auth.application.request.SignUpRequestDto;
+import com.example.mogakserver.auth.application.request.TokenRequestDto;
 import com.example.mogakserver.auth.application.response.LoginResponseDto;
 import com.example.mogakserver.common.exception.dto.TokenPair;
 import com.example.mogakserver.common.config.jwt.JwtService;
+import com.example.mogakserver.common.exception.model.NotFoundException;
+import com.example.mogakserver.common.exception.model.UnAuthorizedException;
 import com.example.mogakserver.external.kakao.service.KakaoSocialService;
 import com.example.mogakserver.user.domain.entity.User;
 import com.example.mogakserver.user.domain.repository.UserRepository;
@@ -12,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
+import static com.example.mogakserver.common.exception.enums.ErrorCode.TOKEN_TIME_EXPIRED_EXCEPTION;
 import static com.example.mogakserver.common.exception.enums.ErrorCode.USER_NOT_FOUND_EXCEPTION;
 
 @Service
@@ -60,5 +64,20 @@ public class AuthService {
                 tokenPair.refreshToken(),
                 true
         );
+    }
+
+    public TokenPair refresh(final TokenRequestDto tokenRequestDto) {
+        if (!jwtService.verifyToken(tokenRequestDto.refreshToken()))
+            throw new UnAuthorizedException(TOKEN_TIME_EXPIRED_EXCEPTION);
+
+        final String userId = jwtService.getUserIdInToken(tokenRequestDto.refreshToken());
+        final User user = userRepository.findById(Long.parseLong(userId)).orElseThrow(() -> new NotFoundException(USER_NOT_FOUND_EXCEPTION));
+
+        if (!jwtService.compareRefreshToken(userId, tokenRequestDto.refreshToken()))
+            throw new UnAuthorizedException(TOKEN_TIME_EXPIRED_EXCEPTION);
+
+        final TokenPair tokenPair = jwtService.generateTokenPair(userId);
+        jwtService.saveRefreshToken(userId, tokenPair.refreshToken());
+        return tokenPair;
     }
 }
