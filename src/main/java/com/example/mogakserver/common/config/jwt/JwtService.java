@@ -31,7 +31,7 @@ public class JwtService {
     private static final String REFRESH_TOKEN = "REFRESH_TOKEN";
     public static final int MINUTE_IN_MILLISECONDS = 60 * 1000;
     public static final long DAYS_IN_MILLISECONDS = 24 * 60 * 60 * 1000L;
-    public static final int ACCESS_TOKEN_EXPIRATION_MINUTE = 10;
+    public static final int ACCESS_TOKEN_EXPIRATION_MINUTE = 60;
     public static final int REFRESH_TOKEN_EXPIRATION_DAYS = 14;
     private final RedisTemplate<String, String> redisTemplate;
 
