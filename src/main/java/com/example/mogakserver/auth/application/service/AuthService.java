@@ -1,7 +1,7 @@
 package com.example.mogakserver.auth.application.service;
 
-import com.example.mogakserver.auth.application.request.SignUpRequestDto;
-import com.example.mogakserver.auth.application.request.TokenRequestDto;
+import com.example.mogakserver.auth.api.request.SignUpRequestDto;
+import com.example.mogakserver.auth.api.request.TokenRequestDto;
 import com.example.mogakserver.auth.application.response.LoginResponseDto;
 import com.example.mogakserver.common.exception.dto.TokenPair;
 import com.example.mogakserver.common.config.jwt.JwtService;
@@ -9,7 +9,7 @@ import com.example.mogakserver.common.exception.model.NotFoundException;
 import com.example.mogakserver.common.exception.model.UnAuthorizedException;
 import com.example.mogakserver.external.kakao.service.KakaoSocialService;
 import com.example.mogakserver.user.domain.entity.User;
-import com.example.mogakserver.user.domain.repository.UserRepository;
+import com.example.mogakserver.user.infra.repository.JpaUserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -23,11 +23,11 @@ import static com.example.mogakserver.common.exception.enums.ErrorCode.USER_NOT_
 public class AuthService {
     private final JwtService jwtService;
     private final KakaoSocialService kakaoSocialService;
-    private final UserRepository userRepository;
+    private final JpaUserRepository jpaUserRepository;
 
     public LoginResponseDto login(final String baseUrl, final String kakaoCode) {
         Long kakaoId = kakaoSocialService.getIdFromKakao(baseUrl, kakaoCode);
-        Optional<User> user = userRepository.findByKakaoId(kakaoId);
+        Optional<User> user = jpaUserRepository.findByKakaoId(kakaoId);
 
         if (user.isEmpty()) {
             TokenPair tokenPair = jwtService.generateTokenPair(String.valueOf(kakaoId));
@@ -54,7 +54,7 @@ public class AuthService {
                 .nickName(signUpRequest.nickName())
                 .portfolioUrl(signUpRequest.portfolioUrl())
                 .build();
-        userRepository.save(newUser);
+        jpaUserRepository.save(newUser);
 
         TokenPair tokenPair = jwtService.generateTokenPair(String.valueOf(newUser.getId()));
 
@@ -71,7 +71,7 @@ public class AuthService {
             throw new UnAuthorizedException(TOKEN_TIME_EXPIRED_EXCEPTION);
 
         final String userId = jwtService.getUserIdInToken(tokenRequestDto.refreshToken());
-        final User user = userRepository.findById(Long.parseLong(userId)).orElseThrow(() -> new NotFoundException(USER_NOT_FOUND_EXCEPTION));
+        final User user = jpaUserRepository.findById(Long.parseLong(userId)).orElseThrow(() -> new NotFoundException(USER_NOT_FOUND_EXCEPTION));
 
         if (!jwtService.compareRefreshToken(userId, tokenRequestDto.refreshToken()))
             throw new UnAuthorizedException(TOKEN_TIME_EXPIRED_EXCEPTION);

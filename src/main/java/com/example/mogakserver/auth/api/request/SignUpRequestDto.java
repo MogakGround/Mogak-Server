@@ -1,4 +1,4 @@
-package com.example.mogakserver.auth.application.request;
+package com.example.mogakserver.auth.api.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

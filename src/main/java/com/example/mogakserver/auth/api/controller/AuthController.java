@@ -1,7 +1,7 @@
 package com.example.mogakserver.auth.api.controller;
 
-import com.example.mogakserver.auth.application.request.SignUpRequestDto;
-import com.example.mogakserver.auth.application.request.TokenRequestDto;
+import com.example.mogakserver.auth.api.request.SignUpRequestDto;
+import com.example.mogakserver.auth.api.request.TokenRequestDto;
 import com.example.mogakserver.common.exception.dto.SuccessResponse;
 import com.example.mogakserver.common.config.resolver.kakao.KakaoCode;
 import com.example.mogakserver.common.exception.dto.TokenPair;
