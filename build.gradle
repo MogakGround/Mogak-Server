@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.4.1'
+    id 'org.springframework.boot' version '3.2.6'
     id 'io.spring.dependency-management' version '1.1.7'
 }
 
@@ -25,6 +25,16 @@ repositories {
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+    implementation 'com.squareup.okhttp3:okhttp:4.9.3'
+
+    //jwt
+    implementation group: 'io.jsonwebtoken', name: 'jjwt-api', version: '0.11.2'
+    implementation group: 'io.jsonwebtoken', name: 'jjwt-impl', version: '0.11.2'
+    implementation group: 'io.jsonwebtoken', name: 'jjwt-jackson', version: '0.11.2'
+
+    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign:4.1.0'
 
     //jpa
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
