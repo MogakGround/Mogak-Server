@@ -57,5 +57,14 @@ public class AuthController {
     public SuccessResponse<TokenPair> refresh(@RequestBody final TokenRequestDto tokenRequestDto) {
         return SuccessResponse.success(REFRESH_SUCCESS, authService.refresh(tokenRequestDto));
     }
+
+    @PostMapping("/delete")
+    public SuccessResponse<Void> deleteUser(HttpServletRequest request) {
+        String token = tokenService.extractTokenFromHeader(request);
+        Long userId = authService.extractUserIdFromToken(token);
+        authService.deleteUser(userId);
+
+        return SuccessResponse.success(USER_DELETION_SUCCESS, null);
+    }
 }
 

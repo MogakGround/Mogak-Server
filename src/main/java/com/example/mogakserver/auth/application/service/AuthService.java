@@ -89,4 +89,10 @@ public class AuthService {
         jwtService.saveRefreshToken(userId, tokenPair.refreshToken());
         return tokenPair;
     }
+
+    public void deleteUser(Long userId) {
+        User user = jpaUserRepository.findById(userId).orElseThrow(() -> new NotFoundException(USER_NOT_FOUND_EXCEPTION));
+        jwtService.deleteRefreshToken(String.valueOf(userId));
+        jpaUserRepository.delete(user);
+    }
 }

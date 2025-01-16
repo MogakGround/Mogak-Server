@@ -11,7 +11,8 @@ public enum SuccessCode {
     SIGNUP_SUCCESS(HttpStatus.OK, "신규 회원 입니다."),
     SOCIAL_LOGIN_SUCCESS(HttpStatus.OK, "카카오 로그인 성공입니다."),
     LOGOUT_SUCCESS(HttpStatus.OK, "로그아웃 성공입니다."),
-    REFRESH_SUCCESS(HttpStatus.OK, "토큰 갱신 성공입니다.");
+    REFRESH_SUCCESS(HttpStatus.OK, "토큰 갱신 성공입니다."),
+    USER_DELETION_SUCCESS(HttpStatus.OK, "회원 탈퇴 성공입니다.");
 
     private final HttpStatus httpStatus;
     private final String message;
