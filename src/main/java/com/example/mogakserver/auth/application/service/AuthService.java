@@ -66,6 +66,15 @@ public class AuthService {
         );
     }
 
+    public Long extractUserIdFromToken(String token) {
+        return Long.parseLong(jwtService.getUserIdInToken(token));
+    }
+
+    public void logout(final Long userId) {
+        final User user = jpaUserRepository.findById(userId).orElseThrow(() -> new NotFoundException(USER_NOT_FOUND_EXCEPTION));
+        jwtService.deleteRefreshToken(String.valueOf(userId));
+    }
+
     public TokenPair refresh(final TokenRequestDto tokenRequestDto) {
         if (!jwtService.verifyToken(tokenRequestDto.refreshToken()))
             throw new UnAuthorizedException(TOKEN_TIME_EXPIRED_EXCEPTION);

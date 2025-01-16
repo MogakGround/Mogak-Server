@@ -2,6 +2,7 @@ package com.example.mogakserver.auth.api.controller;
 
 import com.example.mogakserver.auth.api.request.SignUpRequestDto;
 import com.example.mogakserver.auth.api.request.TokenRequestDto;
+import com.example.mogakserver.auth.application.service.TokenService;
 import com.example.mogakserver.common.exception.dto.SuccessResponse;
 import com.example.mogakserver.common.config.resolver.kakao.KakaoCode;
 import com.example.mogakserver.common.exception.dto.TokenPair;
@@ -23,6 +24,7 @@ public class AuthController {
 
     private static final String ORIGIN = "origin";
     private final AuthService authService;
+    private final TokenService tokenService;
 
     @PostMapping("/login")
     public SuccessResponse<LoginResponseDto> login(
@@ -41,6 +43,14 @@ public class AuthController {
     public SuccessResponse<LoginResponseDto> signUp(
             @RequestBody SignUpRequestDto signUpRequest) {
         return SuccessResponse.success(SOCIAL_LOGIN_SUCCESS, authService.signUp(signUpRequest));
+    }
+
+    @PostMapping("/logout")
+    public SuccessResponse<Void> logout(HttpServletRequest request) {
+        String token = tokenService.extractTokenFromHeader(request);
+        Long userId = authService.extractUserIdFromToken(token);
+        authService.logout(userId);
+        return SuccessResponse.success(LOGOUT_SUCCESS, null);
     }
 
     @PostMapping("/refresh")
