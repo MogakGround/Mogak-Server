@@ -2,8 +2,10 @@ package com.example.mogakserver.auth.api.controller;
 
 import com.example.mogakserver.auth.api.request.SignUpRequestDto;
 import com.example.mogakserver.auth.api.request.TokenRequestDto;
+import com.example.mogakserver.auth.application.response.LoginResponseDto;
+import com.example.mogakserver.auth.application.service.AuthService;
+import com.example.mogakserver.common.util.resolver.kakao.KakaoCode;
 import com.example.mogakserver.common.exception.dto.SuccessResponse;
-import com.example.mogakserver.common.config.resolver.kakao.KakaoCode;
 import com.example.mogakserver.common.exception.dto.TokenPair;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -11,8 +13,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import com.example.mogakserver.auth.application.response.LoginResponseDto;
-import com.example.mogakserver.auth.application.service.AuthService;
 
 import static com.example.mogakserver.common.exception.enums.SuccessCode.*;
 
