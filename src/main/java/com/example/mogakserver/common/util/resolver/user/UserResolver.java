@@ -1,4 +1,4 @@
-package com.example.mogakserver.common.config.resolver.user;
+package com.example.mogakserver.common.util.resolver.user;
 
 import com.example.mogakserver.common.exception.model.BadRequestException;
 import com.example.mogakserver.common.exception.model.UnAuthorizedException;

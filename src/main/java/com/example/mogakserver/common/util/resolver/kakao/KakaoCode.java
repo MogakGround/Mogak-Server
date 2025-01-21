@@ -1,4 +1,4 @@
-package com.example.mogakserver.common.config.resolver.kakao;
+package com.example.mogakserver.common.util.resolver.kakao;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

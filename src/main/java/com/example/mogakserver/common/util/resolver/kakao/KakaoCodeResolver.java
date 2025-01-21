@@ -1,4 +1,4 @@
-package com.example.mogakserver.common.config.resolver.kakao;
+package com.example.mogakserver.common.util.resolver.kakao;
 
 import com.example.mogakserver.common.exception.model.BadRequestException;
 import jakarta.servlet.http.HttpServletRequest;
