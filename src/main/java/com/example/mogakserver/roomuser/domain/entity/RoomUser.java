@@ -42,4 +42,8 @@ public class RoomUser {
     private LocalDateTime createdAt;
     @LastModifiedDate
     private LocalDateTime modifiedAt;
+
+    public void updateIsVideoLargeAllowed(){
+        this.isVideoLargeAllowed = !this.isVideoLargeAllowed;
+    }
 }

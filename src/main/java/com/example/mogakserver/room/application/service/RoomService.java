@@ -4,6 +4,7 @@ import com.example.mogakserver.room.application.response.ScreenShareUsersListDTO
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 import java.util.List;
@@ -12,9 +13,12 @@ import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
+@Transactional
 public class RoomService {
     private static final String SCREEN_SHARE_KEY_PREFIX = "screen-share-room-";
     private final RedisTemplate<String, String> redisTemplate;
+
+    @Transactional(readOnly = true)
     public ScreenShareUsersListDTO getScreenShareUsers(Long roomId, int page, int size) {
         String key = SCREEN_SHARE_KEY_PREFIX + roomId;
         Set<String> userIds = redisTemplate.opsForSet().members(key);

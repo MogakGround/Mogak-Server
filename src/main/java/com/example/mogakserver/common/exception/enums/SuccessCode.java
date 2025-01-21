@@ -12,7 +12,8 @@ public enum SuccessCode {
     SOCIAL_LOGIN_SUCCESS(HttpStatus.OK, "카카오 로그인 성공입니다."),
     LOGOUT_SUCCESS(HttpStatus.OK, "로그아웃 성공입니다."),
     REFRESH_SUCCESS(HttpStatus.OK, "토큰 갱신 성공입니다."),
-    GET_SCREEN_SHARE_USERS_SUCCESS(HttpStatus.OK, "화면공유 사용자 리스트 반환 성공입니다.");
+    GET_SCREEN_SHARE_USERS_SUCCESS(HttpStatus.OK, "화면공유 사용자 리스트 반환 성공입니다."),
+    UPDATE_SCREEN_SHARE_LARGE_SUCCESS(HttpStatus.OK, "화면공유 확대 허용 여부 변경 성공입니다.");
 
     private final HttpStatus httpStatus;
     private final String message;
