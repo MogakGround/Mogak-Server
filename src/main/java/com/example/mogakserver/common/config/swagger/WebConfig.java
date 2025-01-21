@@ -1,7 +1,7 @@
 package com.example.mogakserver.common.config.swagger;
 
-import com.example.mogakserver.common.config.resolver.kakao.KakaoCodeResolver;
-import com.example.mogakserver.common.config.resolver.user.UserResolver;
+import com.example.mogakserver.common.util.resolver.kakao.KakaoCodeResolver;
+import com.example.mogakserver.common.util.resolver.user.UserResolver;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;

@@ -1,4 +1,4 @@
-package com.example.mogakserver.common.config.resolver.user;
+package com.example.mogakserver.common.util.resolver.user;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
