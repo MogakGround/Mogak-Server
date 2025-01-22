@@ -31,21 +31,12 @@ public class AuthService {
 
         if (user.isEmpty()) {
             TokenPair tokenPair = jwtService.generateTokenPair(String.valueOf(kakaoId));
-            return new LoginResponseDto(
-                    kakaoId,
-                    tokenPair.accessToken(),
-                    tokenPair.refreshToken(),
-                    true
-            );
+            return LoginResponseDto.NewUserResponse(kakaoId, tokenPair.accessToken(), tokenPair.refreshToken());
         }
 
+        User existingUser = user.get();
         TokenPair tokenPair = jwtService.generateTokenPair(String.valueOf(user.get().getId()));
-        return new LoginResponseDto(
-                user.get().getId(),
-                tokenPair.accessToken(),
-                tokenPair.refreshToken(),
-                false
-        );
+        return LoginResponseDto.ExistingUserResponse(existingUser.getId(), tokenPair.accessToken(), tokenPair.refreshToken());
     }
 
     public LoginResponseDto signUp(SignUpRequestDto signUpRequest) {
@@ -57,13 +48,13 @@ public class AuthService {
         jpaUserRepository.save(newUser);
 
         TokenPair tokenPair = jwtService.generateTokenPair(String.valueOf(newUser.getId()));
+        return LoginResponseDto.SignupResponse(newUser.getId(), tokenPair.accessToken(), tokenPair.refreshToken());
+    }
 
-        return new LoginResponseDto(
-                newUser.getId(),
-                tokenPair.accessToken(),
-                tokenPair.refreshToken(),
-                true
-        );
+    public void logout(final Long userId) {
+        jpaUserRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException(USER_NOT_FOUND_EXCEPTION));
+        jwtService.deleteRefreshToken(String.valueOf(userId));
     }
 
     public TokenPair refresh(final TokenRequestDto tokenRequestDto) {
@@ -79,5 +70,11 @@ public class AuthService {
         final TokenPair tokenPair = jwtService.generateTokenPair(userId);
         jwtService.saveRefreshToken(userId, tokenPair.refreshToken());
         return tokenPair;
+    }
+
+    public void deleteUser(Long userId) {
+        User user = jpaUserRepository.findById(userId).orElseThrow(() -> new NotFoundException(USER_NOT_FOUND_EXCEPTION));
+        jwtService.deleteRefreshToken(String.valueOf(userId));
+        jpaUserRepository.delete(user);
     }
 }
