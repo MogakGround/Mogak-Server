@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Service
 @Transactional
-public class RoomService {
+public class RoomRetrieveService {
     private static final String SCREEN_SHARE_KEY_PREFIX = "screen-share-room-";
     private final RedisTemplate<String, String> redisTemplate;
 
