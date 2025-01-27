@@ -29,11 +29,6 @@ public class RoomUser {
     @NotNull
     private boolean isHost;
 
-    private Integer addedTime;
-
-    @NotNull
-    private boolean isTimerRunning;
-
     @NotNull
     private boolean isVideoLargeAllowed;
 
