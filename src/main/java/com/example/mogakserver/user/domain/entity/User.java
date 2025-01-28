@@ -32,10 +32,18 @@ public class User {
 
     private String email;
 
+    private Long todayAddedTime;
+
     @CreatedDate
     @Column(updatable = false)
     private LocalDateTime createdAt;
     @LastModifiedDate
     private LocalDateTime modifiedAt;
 
+    public void updateTodayAddedTime(Long updateAddedTime){
+        if (this.todayAddedTime == null) {
+            this.todayAddedTime = 0L;
+        }
+        this.todayAddedTime = todayAddedTime+updateAddedTime;
+    }
 }

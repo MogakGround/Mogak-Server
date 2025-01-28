@@ -29,11 +29,6 @@ public class RoomUser {
     @NotNull
     private boolean isHost;
 
-    private Integer addedTime;
-
-    @NotNull
-    private boolean isTimerRunning;
-
     @NotNull
     private boolean isVideoLargeAllowed;
 
@@ -42,4 +37,8 @@ public class RoomUser {
     private LocalDateTime createdAt;
     @LastModifiedDate
     private LocalDateTime modifiedAt;
+
+    public void updateIsVideoLargeAllowed(){
+        this.isVideoLargeAllowed = !this.isVideoLargeAllowed;
+    }
 }
