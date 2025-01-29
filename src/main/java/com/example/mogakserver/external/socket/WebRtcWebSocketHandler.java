@@ -59,13 +59,8 @@ public class WebRtcWebSocketHandler extends TextWebSocketHandler {
             session.sendMessage(new TextMessage("{\"type\":\"error\", \"message\":\"Invalid JSON format\"}"));
             return;
         }
-        String messageType = messageDto.type();
         Long roomId = getRoomId(session);
         Long userId = getUserIdFromHeader(session);
-        String eventMessage = redisService.serializeMessage(createEventMessage(messageType, userId));
-
-
-
         switch (messageDto.type()) {
             case "screen-share-start":
                 screenShareService.addScreenShareUser(roomId, userId);
@@ -130,9 +125,6 @@ public class WebRtcWebSocketHandler extends TextWebSocketHandler {
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("Invalid userId in token");
         }
-    }
-    private MessageDTO createEventMessage(String type, Long userId) {
-        return new MessageDTO(type, userId);
     }
 }
 
