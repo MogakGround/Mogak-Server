@@ -59,27 +59,33 @@ public class WebRtcWebSocketHandler extends TextWebSocketHandler {
             session.sendMessage(new TextMessage("{\"type\":\"error\", \"message\":\"Invalid JSON format\"}"));
             return;
         }
+        String messageType = messageDto.type();
         Long roomId = getRoomId(session);
         Long userId = getUserIdFromHeader(session);
+        String eventMessage = redisService.serializeMessage(createEventMessage(messageType, userId));
         switch (messageDto.type()) {
             case "screen-share-start":
                 screenShareService.addScreenShareUser(roomId, userId);
                 redisService.publishEvent(roomId, "screen-share-start", userId);
+                webSocketBroadcaster.broadcast(roomId, eventMessage);
                 break;
 
             case "screen-share-stop":
                 screenShareService.removeScreenShareUser(roomId, userId);
                 redisService.publishEvent(roomId, "screen-share-stop", userId);
+                webSocketBroadcaster.broadcast(roomId, eventMessage);
                 break;
 
             case "timer-start":
                 timerService.startTimer(roomId, userId);
                 redisService.publishEvent(roomId, "timer-start", userId);
+                webSocketBroadcaster.broadcast(roomId, eventMessage);
                 break;
 
             case "timer-stop":
                 timerService.stopTimer(roomId, userId);
                 redisService.publishEvent(roomId, "timer-stop", userId);
+                webSocketBroadcaster.broadcast(roomId, eventMessage);
                 break;
 
             default:
@@ -125,6 +131,9 @@ public class WebRtcWebSocketHandler extends TextWebSocketHandler {
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("Invalid userId in token");
         }
+    }
+    private MessageDTO createEventMessage(String type, Long userId) {
+        return new MessageDTO(type, userId);
     }
 }
 
