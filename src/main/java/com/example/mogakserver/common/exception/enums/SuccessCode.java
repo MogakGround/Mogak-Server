@@ -16,7 +16,8 @@ public enum SuccessCode {
     USER_DELETION_SUCCESS(HttpStatus.OK, "회원 탈퇴 성공입니다."),
     GET_SCREEN_SHARE_USERS_SUCCESS(HttpStatus.OK, "화면공유 사용자 리스트 반환 성공입니다."),
     GET_MY_STATUS_IN_ROOM_SUCCESS(HttpStatus.OK, "모각방 안에서 내 상태 조회 성공입니다"),
-    GET_PAGED_TIMERS_SUCCESS(HttpStatus.OK, "타이머 리스트 반환 성공입니다.");
+    GET_PAGED_TIMERS_SUCCESS(HttpStatus.OK, "타이머 리스트 반환 성공입니다."),
+    GET_RANKING_SUCCESS(HttpStatus.OK, "랭킹 조회 성공입니다.");
 
     private final HttpStatus httpStatus;
     private final String message;
