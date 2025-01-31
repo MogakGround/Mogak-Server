@@ -32,7 +32,10 @@ public class User {
 
     private String email;
 
-    private Long todayAddedTime;
+    private Long todayAddedTime = 0L;
+
+    @Version
+    private Integer version = 0;
 
     @CreatedDate
     @Column(updatable = false)
@@ -45,5 +48,8 @@ public class User {
             this.todayAddedTime = 0L;
         }
         this.todayAddedTime = todayAddedTime+updateAddedTime;
+    }
+    public void setVersion(int version){
+        this.version = version;
     }
 }
