@@ -12,6 +12,7 @@ import com.example.mogakserver.user.domain.entity.User;
 import com.example.mogakserver.user.infra.repository.JpaUserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -20,6 +21,7 @@ import static com.example.mogakserver.common.exception.enums.ErrorCode.USER_NOT_
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class AuthService {
     private final JwtService jwtService;
     private final KakaoSocialService kakaoSocialService;

@@ -1,4 +1,4 @@
-package com.example.mogakserver.common.config.redis;
+package com.example.mogakserver.external.redis;
 
 import com.example.mogakserver.external.socket.WebSocketBroadCaster;
 import lombok.RequiredArgsConstructor;
