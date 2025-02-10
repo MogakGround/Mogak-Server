@@ -1,4 +1,4 @@
-package com.example.mogakserver.room.application.dto;
+package com.example.mogakserver.room.application.response;
 
 import lombok.Builder;
 

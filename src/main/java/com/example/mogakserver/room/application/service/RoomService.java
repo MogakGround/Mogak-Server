@@ -3,7 +3,7 @@ package com.example.mogakserver.room.application.service;
 import com.example.mogakserver.common.exception.enums.ErrorCode;
 import com.example.mogakserver.common.exception.model.NotFoundException;
 import com.example.mogakserver.common.exception.model.UnAuthorizedException;
-import com.example.mogakserver.room.application.dto.RoomDTO;
+import com.example.mogakserver.room.application.response.RoomDTO;
 import com.example.mogakserver.room.application.dto.RoomRequestDTO;
 import com.example.mogakserver.room.application.dto.RoomUpdateDTO;
 import com.example.mogakserver.room.application.response.RoomListDTO;
@@ -102,14 +102,14 @@ public class RoomService {
 
         List<RoomDTO> roomDTOs = roomPage.getContent().stream()
                 .map(room -> RoomDTO.builder()
-                            .roomId(room.getId())
-                            .roomName(room.getRoomName())
-                            .roomExplain(room.getRoomExplain())
-                            .isLocked(room.isLocked())
-                            .userCnt(room.getUserCnt())
-                            .roomImg(getRoomImgUrl(room.getId()))
-                            .workHours(workTimeRepository.findWorkHoursByRoomId(room.getId()))
-                            .build())
+                        .roomId(room.getId())
+                        .roomName(room.getRoomName())
+                        .roomExplain(room.getRoomExplain())
+                        .isLocked(room.isLocked())
+                        .userCnt(room.getUserCnt())
+                        .roomImg(getRoomImgUrl(room.getId()))
+                        .workHours(workTimeRepository.findWorkHoursByRoomId(room.getId()))
+                        .build())
                 .collect(Collectors.toList());
 
         return RoomListDTO.builder()
@@ -120,8 +120,23 @@ public class RoomService {
                 .build();
     }
 
+    public RoomDTO getRoomById(Long roomId) {
+        Room room = roomRepository.findById(roomId)
+                .orElseThrow(() -> new NotFoundException(ErrorCode.NOT_FOUND_ROOM_EXCEPTION));
+
+        return RoomDTO.builder()
+                .roomId(room.getId())
+                .roomName(room.getRoomName())
+                .roomExplain(room.getRoomExplain())
+                .isLocked(room.isLocked())
+                .userCnt(room.getUserCnt())
+                .roomImg(getRoomImgUrl(room.getId()))
+                .workHours(workTimeRepository.findWorkHoursByRoomId(room.getId()))
+                .build();
+    }
+
     private String getRoomImgUrl(Long roomId) {
         RoomImgType roomImgType = roomImgRepository.findRoomImgTypeByRoomId(roomId);
-        return (roomImgType != null) ? roomImgType.getRoomImgUrl() : null;
+        return roomImgType.getRoomImgUrl();
     }
 }
