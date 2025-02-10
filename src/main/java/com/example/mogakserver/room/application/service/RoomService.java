@@ -75,6 +75,7 @@ public class RoomService {
         return room.getId();
     }
 
+    @Transactional
     public void updateRoom(Long userId, Long roomId, RoomUpdateDTO roomUpdate) {
         Room room = roomRepository.findById(roomId)
                 .orElseThrow(() -> new NotFoundException(ErrorCode.NOT_FOUND_ROOM_EXCEPTION));
@@ -85,6 +86,7 @@ public class RoomService {
         room.updateRoom(roomUpdate.getRoomName(), roomUpdate.getIsLocked(), roomUpdate.getRoomPassword());
     }
 
+    @Transactional(readOnly = true)
     public RoomListDTO getAllRooms(int page, int size, List<String> workHourList) {
         size = size > 0 ? size : 12;
         PageRequest pageRequest = PageRequest.of(page - 1, size);
@@ -120,6 +122,7 @@ public class RoomService {
                 .build();
     }
 
+    @Transactional(readOnly = true)
     public RoomDTO getRoomById(Long roomId) {
         Room room = roomRepository.findById(roomId)
                 .orElseThrow(() -> new NotFoundException(ErrorCode.NOT_FOUND_ROOM_EXCEPTION));
@@ -138,5 +141,20 @@ public class RoomService {
     private String getRoomImgUrl(Long roomId) {
         RoomImgType roomImgType = roomImgRepository.findRoomImgTypeByRoomId(roomId);
         return roomImgType.getRoomImgUrl();
+    }
+
+    @Transactional
+    public void deleteRoom(Long userId, Long roomId) {
+        Room room = roomRepository.findById(roomId)
+                .orElseThrow(() -> new NotFoundException(ErrorCode.NOT_FOUND_ROOM_EXCEPTION));
+
+        roomUserRepository.findByUserIdAndRoomId(userId, roomId)
+                .orElseThrow(() -> new UnAuthorizedException(ErrorCode.ROOM_PERMISSION_DENIED));
+
+        roomImgRepository.deleteByRoomId(roomId);
+        workTimeRepository.deleteByRoomId(roomId);
+        roomUserRepository.deleteByRoomId(roomId);
+
+        roomRepository.deleteById(roomId);
     }
 }

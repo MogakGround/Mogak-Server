@@ -54,6 +54,8 @@ public class RoomController {
                     content = @Content(schema = @Schema(implementation = SuccessResponse.class))),
             @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터입니다",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "403", description = "방 관련 권한이 없습니다",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "존재하지 않는 모각방입니다",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "500", description = "서버 내부 오류입니다.",
@@ -106,5 +108,26 @@ public class RoomController {
     ) {
         RoomDTO roomDTO = roomService.getRoomById(roomId);
         return SuccessResponse.success(SuccessCode.GET_ROOM_SUCCESS, roomDTO);
+    }
+
+    @Operation(summary = "[JWT] 모각방 삭제", description = "모각방을 삭제하는 API입니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "모각방 삭제 성공",
+                    content = @Content(schema = @Schema(implementation = SuccessResponse.class))),
+            @ApiResponse(responseCode = "403", description = "방 관련 권한이 없습니다",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "존재하지 않는 모각방입니다",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류입니다.",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @SecurityRequirement(name = "JWT Auth")
+    @DeleteMapping("/{roomId}")
+    public SuccessNonDataResponse deleteRoom(
+            @Parameter(hidden = true) @UserId Long userId,
+            @PathVariable Long roomId
+    ) {
+        roomService.deleteRoom(userId, roomId);
+        return SuccessNonDataResponse.success(SuccessCode.ROOM_DELETION_SUCCESS);
     }
 }

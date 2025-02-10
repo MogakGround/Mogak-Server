@@ -10,4 +10,7 @@ import java.util.List;
 public interface JpaWorkTimeRepository extends JpaRepository<WorkTime, Long> {
     @Query("SELECT w.workHour FROM WorkTime w WHERE w.roomId = :roomId")
     List<String> findWorkHoursByRoomId(@Param("roomId") Long roomId);
+
+    void deleteByRoomId(Long roomId);
+
 }

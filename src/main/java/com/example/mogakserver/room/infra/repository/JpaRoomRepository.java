@@ -12,11 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface JpaRoomRepository extends JpaRepository<Room, Long> {
-    Page<Room> findAll(Pageable pageable);
-
     @Query("SELECT r FROM Room r WHERE r.id IN " +
             "(SELECT w.roomId FROM WorkTime w WHERE w.workHour IN :workHours)")
     Page<Room> findRoomsByWorkHours(@Param("workHours") List<WorkHour> workHours, Pageable pageable);
-
-    Optional<Room> findById(Long id);
 }

@@ -9,4 +9,6 @@ import org.springframework.data.repository.query.Param;
 public interface JpaRoomImgRepository extends JpaRepository<RoomImg, Long> {
     @Query("SELECT r.roomImgType FROM RoomImg r WHERE r.roomId = :roomId")
     RoomImgType findRoomImgTypeByRoomId(@Param("roomId") Long roomId);
+
+    void deleteByRoomId(Long roomId);
 }
