@@ -1,12 +1,12 @@
 package com.example.mogakserver.room.api.controller;
 
 import com.example.mogakserver.common.exception.dto.ErrorResponse;
+import com.example.mogakserver.common.exception.dto.SuccessNonDataResponse;
 import com.example.mogakserver.common.exception.dto.SuccessResponse;
 import com.example.mogakserver.common.exception.enums.SuccessCode;
 import com.example.mogakserver.common.util.resolver.user.UserId;
 import com.example.mogakserver.room.application.dto.RoomRequestDTO;
 import com.example.mogakserver.room.application.dto.RoomUpdateDTO;
-import com.example.mogakserver.room.application.response.RoomDTO;
 import com.example.mogakserver.room.application.service.RoomService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -36,12 +36,12 @@ public class RoomController {
     })
     @SecurityRequirement(name = "JWT Auth")
     @PostMapping
-    public SuccessResponse<RoomDTO> createRoom(
+    public SuccessNonDataResponse createRoom(
             @Parameter(hidden = true) @UserId Long userId,
             @Valid @RequestBody RoomRequestDTO roomRequestDTO
     ) {
-        Long roomId = roomService.createRoom(userId, roomRequestDTO);
-        return SuccessResponse.success(SuccessCode.ROOM_CREATION_SUCCESS, new RoomDTO(roomId));
+        roomService.createRoom(userId, roomRequestDTO);
+        return SuccessNonDataResponse.success(SuccessCode.ROOM_CREATION_SUCCESS);
     }
 
     @Operation(summary = "[JWT] 모각방 정보 수정", description = "모각방 정보를 수정하는 API입니다")
@@ -57,12 +57,12 @@ public class RoomController {
     })
     @SecurityRequirement(name = "JWT Auth")
     @PatchMapping("/{roomId}")
-    public SuccessResponse<RoomDTO> updateRoom(
+    public SuccessNonDataResponse updateRoom(
             @Parameter(hidden = true) @UserId Long userId,
             @PathVariable Long roomId,
             @Valid @RequestBody RoomUpdateDTO roomUpdateDTO
     ) {
         roomService.updateRoom(userId, roomId, roomUpdateDTO);
-        return SuccessResponse.success(SuccessCode.UPDATE_ROOM_SUCCESS, new RoomDTO(roomId));
+        return SuccessNonDataResponse.success(SuccessCode.UPDATE_ROOM_SUCCESS);
     }
 }
