@@ -27,19 +27,16 @@ public class Room {
     @NotNull
     private boolean isLocked;
 
-    private String roomUrl;
-
     private String roomPassword;
 
     private Integer userCnt;
 
     private String roomExplain;
 
-    private String roomImgUrl;
-
     @CreatedDate
     @Column(updatable = false)
     private LocalDateTime createdAt;
+
     @LastModifiedDate
     private LocalDateTime modifiedAt;
 }
