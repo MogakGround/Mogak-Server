@@ -130,4 +130,17 @@ public class RoomController {
         roomService.deleteRoom(userId, roomId);
         return SuccessNonDataResponse.success(SuccessCode.ROOM_DELETION_SUCCESS);
     }
+
+    @Operation(summary = "최근 모각방 top4 조회", description = "최근에 생성된 4개의 모각방을 조회하는 API입니다")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "최근 모각방 top4 조회 성공",
+                    content = @Content(schema = @Schema(implementation = SuccessResponse.class))),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류입니다.",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping("/recent")
+    public SuccessResponse<List<RoomDTO>> getRecentRooms() {
+        List<RoomDTO> recentRooms = roomService.getRecentRooms();
+        return SuccessResponse.success(SuccessCode.GET_RECENT_ROOMS_SUCCESS, recentRooms);
+    }
 }

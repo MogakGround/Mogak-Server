@@ -101,16 +101,9 @@ public class RoomService {
 
         }
 
+
         List<RoomDTO> roomDTOs = roomPage.getContent().stream()
-                .map(room -> RoomDTO.builder()
-                        .roomId(room.getId())
-                        .roomName(room.getRoomName())
-                        .roomExplain(room.getRoomExplain())
-                        .isLocked(room.isLocked())
-                        .userCnt(room.getUserCnt())
-                        .roomImg(getRoomImgUrl(room.getId()))
-                        .workHours(workTimeRepository.findWorkHoursByRoomId(room.getId()))
-                        .build())
+                .map(room -> toRoomDTO(null, room))
                 .collect(Collectors.toList());
 
         return RoomListDTO.builder()
@@ -126,16 +119,7 @@ public class RoomService {
         Room room = roomRepository.findById(roomId)
                 .orElseThrow(() -> new NotFoundException(ErrorCode.NOT_FOUND_ROOM_EXCEPTION));
 
-        return RoomDTO.builder()
-                .roomId(room.getId())
-                .roomName(room.getRoomName())
-                .roomExplain(room.getRoomExplain())
-                .isLocked(room.isLocked())
-                .userCnt(room.getUserCnt())
-                .isHost(isUserHost(userId, room.getId()))
-                .roomImg(getRoomImgUrl(room.getId()))
-                .workHours(workTimeRepository.findWorkHoursByRoomId(room.getId()))
-                .build();
+        return toRoomDTO(userId, room);
     }
 
     @Transactional
@@ -149,6 +133,26 @@ public class RoomService {
         roomUserRepository.deleteByRoomId(roomId);
 
         roomRepository.deleteById(roomId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<RoomDTO> getRecentRooms() {
+        return roomRepository.findTop4ByOrderByCreatedAtDesc().stream()
+                .map(room -> toRoomDTO(null, room))
+                .collect(Collectors.toList());
+    }
+
+    private RoomDTO toRoomDTO(Long userId, Room room) {
+        return RoomDTO.builder()
+                .roomId(room.getId())
+                .roomName(room.getRoomName())
+                .roomExplain(room.getRoomExplain())
+                .isLocked(room.isLocked())
+                .userCnt(room.getUserCnt())
+                .roomImg(getRoomImgUrl(room.getId()))
+                .workHours(workTimeRepository.findWorkHoursByRoomId(room.getId()))
+                .isHost(userId != null && isUserHost(userId, room.getId()))
+                .build();
     }
 
     private String getRoomImgUrl(Long roomId) {

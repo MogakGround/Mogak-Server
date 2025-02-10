@@ -16,6 +16,7 @@ public enum SuccessCode {
     UPDATE_ROOM_SUCCESS(HttpStatus.OK, "모각방 정보 수정 성공입니다."),
     GET_PAGED_ROOMS_SUCCESS(HttpStatus.OK, "모각방 전체 목록 조회 성공입니다."),
     GET_ROOM_SUCCESS(HttpStatus.OK, "모각방 단일 조회 성공입니다."),
+    GET_RECENT_ROOMS_SUCCESS(HttpStatus.OK, "최근 생성된 모각방 top4 조회 성공입니다."),
     ROOM_DELETION_SUCCESS(HttpStatus.OK, "모각방 삭제 성공입니다."),
     UPDATE_SCREEN_SHARE_LARGE_SUCCESS(HttpStatus.OK, "화면공유 확대 허용 여부 변경 성공입니다."),
     USER_DELETION_SUCCESS(HttpStatus.OK, "회원 탈퇴 성공입니다."),
