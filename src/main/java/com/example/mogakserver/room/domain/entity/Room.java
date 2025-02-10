@@ -33,6 +33,13 @@ public class Room {
 
     private String roomExplain;
 
+    public void updateRoom(String roomName, Boolean isLocked, String roomPassword) {
+        this.roomName = roomName;
+        this.isLocked = isLocked;
+
+        this.roomPassword = Boolean.FALSE.equals(isLocked) ? null : roomPassword;
+    }
+
     @CreatedDate
     @Column(updatable = false)
     private LocalDateTime createdAt;

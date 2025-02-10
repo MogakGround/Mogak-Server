@@ -1,6 +1,10 @@
 package com.example.mogakserver.room.application.service;
 
+import com.example.mogakserver.common.exception.enums.ErrorCode;
+import com.example.mogakserver.common.exception.model.NotFoundException;
+import com.example.mogakserver.common.exception.model.UnAuthorizedException;
 import com.example.mogakserver.room.application.dto.RoomRequestDTO;
+import com.example.mogakserver.room.application.dto.RoomUpdateDTO;
 import com.example.mogakserver.room.domain.entity.Room;
 import com.example.mogakserver.room.infra.repository.JpaRoomRepository;
 import com.example.mogakserver.roomimg.domain.entity.RoomImg;
@@ -63,5 +67,15 @@ public class RoomService {
         workTimeRepository.saveAll(workTimes);
 
         return room.getId();
+    }
+
+    public void updateRoom(Long userId, Long roomId, RoomUpdateDTO roomUpdate) {
+        Room room = roomRepository.findById(roomId)
+                .orElseThrow(() -> new NotFoundException(ErrorCode.NOT_FOUND_ROOM_EXCEPTION));
+
+        roomUserRepository.findByUserIdAndRoomId(userId, roomId)
+                .orElseThrow(() -> new UnAuthorizedException(ErrorCode.ROOM_PERMISSION_DENIED));
+
+        room.updateRoom(roomUpdate.getRoomName(), roomUpdate.getIsLocked(), roomUpdate.getRoomPassword());
     }
 }
