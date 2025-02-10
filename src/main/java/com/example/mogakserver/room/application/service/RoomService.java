@@ -85,8 +85,9 @@ public class RoomService {
         room.updateRoom(roomUpdate.getRoomName(), roomUpdate.getIsLocked(), roomUpdate.getRoomPassword());
     }
 
-    public RoomListDTO getAllRooms(int page, List<String> workHourList) {
-        PageRequest pageRequest = PageRequest.of(page - 1, 12);
+    public RoomListDTO getAllRooms(int page, int size, List<String> workHourList) {
+        size = size > 0 ? size : 12;
+        PageRequest pageRequest = PageRequest.of(page - 1, size);
         Page<Room> roomPage;
 
         if (workHourList == null || workHourList.isEmpty()) {

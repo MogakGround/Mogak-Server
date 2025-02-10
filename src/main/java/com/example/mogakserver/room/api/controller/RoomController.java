@@ -81,9 +81,10 @@ public class RoomController {
     @GetMapping
     public SuccessResponse<RoomListDTO> getAllRooms(
             @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "12") int size,
             @RequestParam(required = false) List<String> workHours
     ) {
-        RoomListDTO roomListDTO = roomService.getAllRooms(page, workHours);
+        RoomListDTO roomListDTO = roomService.getAllRooms(page, size, workHours);
         return SuccessResponse.success(SuccessCode.GET_PAGED_ROOMS_SUCCESS, roomListDTO);
     }
 }
