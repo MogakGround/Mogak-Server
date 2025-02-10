@@ -10,6 +10,7 @@ public record RoomDTO(
         String roomName,
         String roomExplain,
         Boolean isLocked,
+        Boolean isHost,
         Integer userCnt,
         String roomImg,
         List<String> workHours

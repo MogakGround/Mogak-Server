@@ -106,7 +106,7 @@ public class RoomController {
             @Parameter(hidden = true) @UserId Long userId,
             @PathVariable Long roomId
     ) {
-        RoomDTO roomDTO = roomService.getRoomById(roomId);
+        RoomDTO roomDTO = roomService.getRoomById(userId, roomId);
         return SuccessResponse.success(SuccessCode.GET_ROOM_SUCCESS, roomDTO);
     }
 

@@ -77,11 +77,10 @@ public class RoomService {
 
     @Transactional
     public void updateRoom(Long userId, Long roomId, RoomUpdateDTO roomUpdate) {
+        validateHostPermission(userId, roomId);
+
         Room room = roomRepository.findById(roomId)
                 .orElseThrow(() -> new NotFoundException(ErrorCode.NOT_FOUND_ROOM_EXCEPTION));
-
-        roomUserRepository.findByUserIdAndRoomId(userId, roomId)
-                .orElseThrow(() -> new UnAuthorizedException(ErrorCode.ROOM_PERMISSION_DENIED));
 
         room.updateRoom(roomUpdate.getRoomName(), roomUpdate.getIsLocked(), roomUpdate.getRoomPassword());
     }
@@ -123,7 +122,7 @@ public class RoomService {
     }
 
     @Transactional(readOnly = true)
-    public RoomDTO getRoomById(Long roomId) {
+    public RoomDTO getRoomById(Long userId, Long roomId) {
         Room room = roomRepository.findById(roomId)
                 .orElseThrow(() -> new NotFoundException(ErrorCode.NOT_FOUND_ROOM_EXCEPTION));
 
@@ -133,9 +132,23 @@ public class RoomService {
                 .roomExplain(room.getRoomExplain())
                 .isLocked(room.isLocked())
                 .userCnt(room.getUserCnt())
+                .isHost(isUserHost(userId, room.getId()))
                 .roomImg(getRoomImgUrl(room.getId()))
                 .workHours(workTimeRepository.findWorkHoursByRoomId(room.getId()))
                 .build();
+    }
+
+    @Transactional
+    public void deleteRoom(Long userId, Long roomId) {
+        validateHostPermission(userId, roomId);
+
+        roomRepository.findById(roomId).orElseThrow(() -> new NotFoundException(ErrorCode.NOT_FOUND_ROOM_EXCEPTION));
+
+        roomImgRepository.deleteByRoomId(roomId);
+        workTimeRepository.deleteByRoomId(roomId);
+        roomUserRepository.deleteByRoomId(roomId);
+
+        roomRepository.deleteById(roomId);
     }
 
     private String getRoomImgUrl(Long roomId) {
@@ -143,18 +156,16 @@ public class RoomService {
         return roomImgType.getRoomImgUrl();
     }
 
-    @Transactional
-    public void deleteRoom(Long userId, Long roomId) {
-        Room room = roomRepository.findById(roomId)
-                .orElseThrow(() -> new NotFoundException(ErrorCode.NOT_FOUND_ROOM_EXCEPTION));
+    private boolean isUserHost(Long userId, Long roomId) {
+        return roomUserRepository.findByUserIdAndRoomId(userId, roomId)
+                .map(RoomUser::isHost)
+                .orElse(false);
+    }
 
-        roomUserRepository.findByUserIdAndRoomId(userId, roomId)
-                .orElseThrow(() -> new UnAuthorizedException(ErrorCode.ROOM_PERMISSION_DENIED));
-
-        roomImgRepository.deleteByRoomId(roomId);
-        workTimeRepository.deleteByRoomId(roomId);
-        roomUserRepository.deleteByRoomId(roomId);
-
-        roomRepository.deleteById(roomId);
+    private void validateHostPermission(Long userId, Long roomId) {
+        boolean isHost = isUserHost(userId, roomId);
+        if (!isHost) {
+            throw new UnAuthorizedException(ErrorCode.ROOM_PERMISSION_DENIED);
+        }
     }
 }
