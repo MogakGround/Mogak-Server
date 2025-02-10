@@ -5,6 +5,7 @@ import com.example.mogakserver.common.exception.dto.SuccessResponse;
 import com.example.mogakserver.common.exception.enums.SuccessCode;
 import com.example.mogakserver.common.util.resolver.user.UserId;
 import com.example.mogakserver.room.application.dto.RoomRequestDTO;
+import com.example.mogakserver.room.application.response.RoomDTO;
 import com.example.mogakserver.room.application.service.RoomService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -34,11 +35,11 @@ public class RoomController {
     })
     @SecurityRequirement(name = "JWT Auth")
     @PostMapping
-    public SuccessResponse<Long> createRoom(
+    public SuccessResponse<RoomDTO> createRoom(
             @Parameter(hidden = true) @UserId Long userId,
             @Valid @RequestBody RoomRequestDTO roomRequestDTO
     ) {
         Long roomId = roomService.createRoom(userId, roomRequestDTO);
-        return SuccessResponse.success(SuccessCode.ROOM_CREATION_SUCCESS, roomId);
+        return SuccessResponse.success(SuccessCode.ROOM_CREATION_SUCCESS, new RoomDTO(roomId));
     }
 }
