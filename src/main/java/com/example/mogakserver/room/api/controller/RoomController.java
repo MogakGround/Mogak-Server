@@ -7,6 +7,7 @@ import com.example.mogakserver.common.exception.enums.SuccessCode;
 import com.example.mogakserver.common.util.resolver.user.UserId;
 import com.example.mogakserver.room.application.dto.RoomRequestDTO;
 import com.example.mogakserver.room.application.dto.RoomUpdateDTO;
+import com.example.mogakserver.room.application.response.RoomListDTO;
 import com.example.mogakserver.room.application.service.RoomService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -18,6 +19,8 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/room")
@@ -64,5 +67,23 @@ public class RoomController {
     ) {
         roomService.updateRoom(userId, roomId, roomUpdateDTO);
         return SuccessNonDataResponse.success(SuccessCode.UPDATE_ROOM_SUCCESS);
+    }
+
+    @Operation(summary = "모각방 전체 조회", description = "모든 모각방을 조회하는 API입니다")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "모각방 전체 조회 성공",
+                    content = @Content(schema = @Schema(implementation = RoomListDTO.class))),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터입니다",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류입니다.",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping
+    public SuccessResponse<RoomListDTO> getAllRooms(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(required = false) List<String> workHours
+    ) {
+        RoomListDTO roomListDTO = roomService.getAllRooms(page, workHours);
+        return SuccessResponse.success(SuccessCode.GET_PAGED_ROOMS_SUCCESS, roomListDTO);
     }
 }

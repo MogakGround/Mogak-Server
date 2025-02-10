@@ -3,17 +3,23 @@ package com.example.mogakserver.room.application.service;
 import com.example.mogakserver.common.exception.enums.ErrorCode;
 import com.example.mogakserver.common.exception.model.NotFoundException;
 import com.example.mogakserver.common.exception.model.UnAuthorizedException;
+import com.example.mogakserver.room.application.dto.RoomDTO;
 import com.example.mogakserver.room.application.dto.RoomRequestDTO;
 import com.example.mogakserver.room.application.dto.RoomUpdateDTO;
+import com.example.mogakserver.room.application.response.RoomListDTO;
 import com.example.mogakserver.room.domain.entity.Room;
 import com.example.mogakserver.room.infra.repository.JpaRoomRepository;
 import com.example.mogakserver.roomimg.domain.entity.RoomImg;
+import com.example.mogakserver.roomimg.domain.entity.RoomImgType;
 import com.example.mogakserver.roomimg.infra.repository.JpaRoomImgRepository;
 import com.example.mogakserver.roomuser.domain.entity.RoomUser;
 import com.example.mogakserver.roomuser.infra.repository.JpaRoomUserRepository;
+import com.example.mogakserver.worktime.domain.entity.WorkHour;
 import com.example.mogakserver.worktime.domain.entity.WorkTime;
 import com.example.mogakserver.worktime.infra.repository.JpaWorkTimeRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -77,5 +83,44 @@ public class RoomService {
                 .orElseThrow(() -> new UnAuthorizedException(ErrorCode.ROOM_PERMISSION_DENIED));
 
         room.updateRoom(roomUpdate.getRoomName(), roomUpdate.getIsLocked(), roomUpdate.getRoomPassword());
+    }
+
+    public RoomListDTO getAllRooms(int page, List<String> workHourList) {
+        PageRequest pageRequest = PageRequest.of(page - 1, 12);
+        Page<Room> roomPage;
+
+        if (workHourList == null || workHourList.isEmpty()) {
+            roomPage = roomRepository.findAll(pageRequest);
+        } else {
+            List<WorkHour> workHours = workHourList.stream()
+                    .map(WorkHour::valueOf)
+                    .collect(Collectors.toList());
+            roomPage = roomRepository.findRoomsByWorkHours(workHours, pageRequest);
+
+        }
+
+        List<RoomDTO> roomDTOs = roomPage.getContent().stream()
+                .map(room -> RoomDTO.builder()
+                            .roomId(room.getId())
+                            .roomName(room.getRoomName())
+                            .roomExplain(room.getRoomExplain())
+                            .isLocked(room.isLocked())
+                            .userCnt(room.getUserCnt())
+                            .roomImg(getRoomImgUrl(room.getId()))
+                            .workHours(workTimeRepository.findWorkHoursByRoomId(room.getId()))
+                            .build())
+                .collect(Collectors.toList());
+
+        return RoomListDTO.builder()
+                .rooms(roomDTOs)
+                .totalPages(roomPage.getTotalPages())
+                .currentPage(page)
+                .totalRooms(roomPage.getTotalElements())
+                .build();
+    }
+
+    private String getRoomImgUrl(Long roomId) {
+        RoomImgType roomImgType = roomImgRepository.findRoomImgTypeByRoomId(roomId);
+        return (roomImgType != null) ? roomImgType.getRoomImgUrl() : null;
     }
 }
