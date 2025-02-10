@@ -7,7 +7,6 @@ import com.example.mogakserver.auth.application.response.LoginResponseDto;
 import com.example.mogakserver.auth.application.service.AuthService;
 import com.example.mogakserver.common.exception.dto.SuccessResponse;
 import com.example.mogakserver.common.exception.dto.TokenPair;
-import com.example.mogakserver.common.exception.enums.ErrorCode;
 import com.example.mogakserver.common.util.resolver.kakao.KakaoCode;
 import com.example.mogakserver.common.util.resolver.user.UserId;
 import io.swagger.v3.oas.annotations.Operation;
@@ -19,7 +18,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -69,9 +67,6 @@ public class AuthController {
     @SecurityRequirement(name = "JWT Auth")
     public SuccessResponse<LoginResponseDto> signUp(
             @RequestBody SignUpRequestDto signUpRequest) {
-        if (signUpRequest == null || signUpRequest.kakaoId() == null) {
-            throw new IllegalArgumentException(ErrorCode.VALIDATION_REQUEST_MISSING_EXCEPTION.getMessage());
-        }
         return SuccessResponse.success(SOCIAL_LOGIN_SUCCESS, authService.signUp(signUpRequest));
     }
 
@@ -91,8 +86,6 @@ public class AuthController {
         return SuccessResponse.success(LOGOUT_SUCCESS, null);
     }
 
-
-
     @Operation(summary = "토큰 갱신 API", description = "리프레시 토큰 갱신")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "토큰 갱신 성공",
@@ -104,9 +97,6 @@ public class AuthController {
     })
     @PostMapping("/refresh")
     public SuccessResponse<TokenPair> refresh(@RequestBody final TokenRequestDto tokenRequestDto) {
-        if (tokenRequestDto == null || tokenRequestDto.refreshToken() == null) {
-            throw new IllegalArgumentException(ErrorCode.VALIDATION_REQUEST_MISSING_EXCEPTION.getMessage());
-        }
         return SuccessResponse.success(REFRESH_SUCCESS, authService.refresh(tokenRequestDto));
     }
 
