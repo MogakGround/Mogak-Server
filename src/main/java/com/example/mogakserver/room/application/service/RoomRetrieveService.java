@@ -8,6 +8,8 @@ import com.example.mogakserver.room.application.response.RoomDTO;
 import com.example.mogakserver.room.application.response.RoomListDTO;
 import com.example.mogakserver.room.application.response.ScreenShareUsersListDTO;
 import com.example.mogakserver.room.application.response.TimerListDTO;
+import com.example.mogakserver.user.domain.entity.User;
+import com.example.mogakserver.user.infra.repository.JpaUserRepository;
 import com.example.mogakserver.room.domain.entity.Room;
 import com.example.mogakserver.room.infra.repository.JpaRoomRepository;
 import com.example.mogakserver.roomimg.domain.entity.RoomImgType;
@@ -37,6 +39,7 @@ public class RoomRetrieveService {
     private final JpaWorkTimeRepository workTimeRepository;
     private final JpaRoomUserRepository roomUserRepository;
     private final RedisTemplate<String, String> redisTemplate;
+    private final JpaUserRepository jpaUserRepository;
 
     @Transactional(readOnly = true)
     public ScreenShareUsersListDTO getScreenShareUsers(Long roomId, int page, int size) {
@@ -108,6 +111,9 @@ public class RoomRetrieveService {
                 //userId 추출
                 String userIdStr = fieldStr.replace("-elapsedTime", "");
                 Long userId = Long.parseLong(userIdStr);
+                User user = jpaUserRepository.findById(userId).orElseThrow(()-> new NotFoundException(ErrorCode.USER_NOT_FOUND_EXCEPTION));
+                String userNickName = user.getNickName();
+
 
                 String elapsedTimeStr = (String) redisTemplate.opsForHash().get(key, userId + "-elapsedTime");
                 String isRunningStr = (String) redisTemplate.opsForHash().get(key, userId + "-isRunning");
@@ -122,6 +128,7 @@ public class RoomRetrieveService {
 
                 timerList.add(TimerDTO.builder()
                         .userId(userId)
+                        .userNickname(userNickName)
                         .hour(hour)
                         .min(min)
                         .sec(sec)

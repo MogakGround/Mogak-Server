@@ -5,6 +5,7 @@ import lombok.Builder;
 @Builder
 public record TimerDTO(
         Long userId,
+        String userNickname,
         int hour,
         int min,
         int sec,
