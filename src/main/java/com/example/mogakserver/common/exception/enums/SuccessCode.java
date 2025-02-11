@@ -25,6 +25,7 @@ public enum SuccessCode {
     GET_MY_STATUS_IN_ROOM_SUCCESS(HttpStatus.OK, "모각방 안에서 내 상태 조회 성공입니다"),
     GET_PAGED_TIMERS_SUCCESS(HttpStatus.OK, "타이머 리스트 반환 성공입니다."),
     GET_ROOMS_I_MADE_SUCCESS(HttpStatus.OK, "내가 만든 모각방 리스트 반환 성공입니다."),
+    GET_ROOMS_I_ENTERED_7DAYS_SUCCESS(HttpStatus.OK, "7일간 모각방 리스트 반환 성공입니다."),
     GET_RANKING_SUCCESS(HttpStatus.OK, "랭킹 조회 성공입니다.");
 
     private final HttpStatus httpStatus;

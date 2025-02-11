@@ -7,7 +7,7 @@ import com.example.mogakserver.common.exception.enums.SuccessCode;
 import com.example.mogakserver.common.util.resolver.user.UserId;
 import com.example.mogakserver.room.application.response.ScreenShareUsersListDTO;
 import com.example.mogakserver.roomuser.application.response.MyStatusResponseDTO;
-import com.example.mogakserver.roomuser.application.response.UserRoomsListDTO;
+import com.example.mogakserver.roomuser.application.response.MyPageUserRoomsListDTO;
 import com.example.mogakserver.roomuser.application.response.RoomUserListDTO;
 import com.example.mogakserver.roomuser.application.service.RoomUserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -64,10 +64,10 @@ public class RoomUserController {
     })
     @SecurityRequirement(name = "JWT Auth")
     @GetMapping("/mypage/rooms/imade")
-    public SuccessResponse<UserRoomsListDTO> getRoomsMadeByMeList(
+    public SuccessResponse<MyPageUserRoomsListDTO> getRoomsMadeByMeList(
             @Parameter(hidden = true) @UserId Long userId,
-            @Parameter(name = "page", description = "페이지 ") @RequestParam(value = "page") int page,
-            @Parameter(name = "size", description = "페이지 ") @RequestParam(value = "size") int size
+            @Parameter(name = "page", description = "페이지 ") @RequestParam(value = "page", defaultValue = "1") int page,
+            @Parameter(name = "size", description = "페이지 ") @RequestParam(value = "size", defaultValue = "12") int size
     ) {
         return SuccessResponse.success(SuccessCode.GET_ROOMS_I_MADE_SUCCESS, roomUserService.getRoomListIMade(userId, page, size));
     }
@@ -89,5 +89,20 @@ public class RoomUserController {
     ) {
         RoomUserListDTO roomUserList = roomUserService.getRoomUsers(userId, roomId);
         return SuccessResponse.success(SuccessCode.GET_ROOM_USERS_SUCCESS, roomUserList);
+    }
+    @Operation(summary = "[JWT] 7일간 들어간 모각방 리스트 조회", description = "7일간 모각방 리스트 조회api입니다")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "7일간 들어간 모각방 리스트 조회 성공", content = @Content(schema = @Schema(implementation = ScreenShareUsersListDTO.class))),
+            @ApiResponse(responseCode = "404", description = "유저가 존재하지 않습니다", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류 입니다.", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+    })
+    @SecurityRequirement(name = "JWT Auth")
+    @GetMapping("/mypage/rooms/7days")
+    public SuccessResponse<MyPageUserRoomsListDTO> getRooms7DaysEnteredList(
+            @Parameter(hidden = true) @UserId Long userId,
+            @Parameter(name = "page", description = "페이지 ") @RequestParam(value = "page", defaultValue = "1") int page,
+            @Parameter(name = "size", description = "페이지 ") @RequestParam(value = "size", defaultValue = "12") int size
+    ) {
+        return SuccessResponse.success(SuccessCode.GET_ROOMS_I_ENTERED_7DAYS_SUCCESS, roomUserService.get7DaysEnteredRooms(userId, page, size));
     }
 }

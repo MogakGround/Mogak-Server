@@ -12,5 +12,6 @@ public interface JpaWorkTimeRepository extends JpaRepository<WorkTime, Long> {
     List<String> findWorkHoursByRoomId(@Param("roomId") Long roomId);
 
     void deleteByRoomId(Long roomId);
+    List<WorkTime> findAllByRoomIdIn(List<Long> hostRoomIds);
 
 }

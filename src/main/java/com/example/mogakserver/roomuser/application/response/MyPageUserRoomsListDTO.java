@@ -5,9 +5,9 @@ import lombok.Builder;
 import java.util.List;
 
 @Builder
-public record UserRoomsListDTO(
+public record MyPageUserRoomsListDTO(
     int totalPage,
     int currentPage,
-    List<UserRoomDTO> rooms
+    List<MyPageUserRoomDTO> rooms
 ) {
 }
