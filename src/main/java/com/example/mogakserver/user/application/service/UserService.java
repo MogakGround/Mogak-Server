@@ -1,6 +1,7 @@
 package com.example.mogakserver.user.application.service;
 
 import com.example.mogakserver.common.exception.enums.ErrorCode;
+import com.example.mogakserver.common.exception.model.ConflictException;
 import com.example.mogakserver.common.exception.model.NotFoundException;
 import com.example.mogakserver.user.application.response.MyProfileResponseDTO;
 import com.example.mogakserver.user.application.response.RankingDTO;
@@ -104,5 +105,11 @@ public class UserService {
     }
 
     private record UserRankAndTime(int rank, long totalSeconds) {}
-}
+    public void isNicknameAvailable(String nickname) {
+        boolean exists = userRepository.existsByNickName(nickname);
+        if (exists) {
+            throw new ConflictException(ErrorCode.ALREADY_EXIST_NICKNAME_EXCEPTION);
+        }
+    }
 
+}

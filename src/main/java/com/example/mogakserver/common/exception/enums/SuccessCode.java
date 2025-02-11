@@ -12,6 +12,8 @@ public enum SuccessCode {
     SOCIAL_LOGIN_SUCCESS(HttpStatus.OK, "카카오 로그인 성공입니다."),
     LOGOUT_SUCCESS(HttpStatus.OK, "로그아웃 성공입니다."),
     REFRESH_SUCCESS(HttpStatus.OK, "토큰 갱신 성공입니다."),
+    GET_AVAILABLE_NICKNAME(HttpStatus.OK, "사용 가능한 닉네임입니다."),
+    GET_AVAILABLE_ROOM_NAME(HttpStatus.OK, "사용 가능한 방 이름입니다."),
     ROOM_CREATION_SUCCESS(HttpStatus.CREATED, "모각방 생성 성공입니다."),
     UPDATE_ROOM_SUCCESS(HttpStatus.OK, "모각방 정보 수정 성공입니다."),
     GET_PAGED_ROOMS_SUCCESS(HttpStatus.OK, "모각방 전체 목록 조회 성공입니다."),

@@ -18,4 +18,5 @@ public interface JpaRoomRepository extends JpaRepository<Room, Long> {
     List<Room> findTop4ByOrderByCreatedAtDesc();
     Page<Room> findAllByIdIn(List<Long> roomIds, Pageable pageable);
 
+    boolean existsByRoomName(String roomName);
 }
