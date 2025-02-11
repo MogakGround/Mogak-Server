@@ -54,4 +54,19 @@ public class UserController {
     ) {
         return SuccessResponse.success(SuccessCode.GET_RANKING_SUCCESS, userService.getUserRanking(userId));
     }
+
+    @Operation(summary = "닉네임 중복 검사", description = "닉네임 중복 검사 API입니다")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "사용 가능한 닉네임입니다",
+                    content = @Content(schema = @Schema(implementation = SuccessNonDataResponse.class))),
+            @ApiResponse(responseCode = "409", description = "이미 사용 중인 닉네임입니다.",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류입니다.",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping("/check-nickname")
+    public SuccessNonDataResponse checkNickname(@RequestParam String nickname) {
+        userService.isNicknameAvailable(nickname);
+        return SuccessNonDataResponse.success(SuccessCode.GET_AVAILABLE_NICKNAME);
+    }
 }

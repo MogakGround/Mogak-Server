@@ -1,6 +1,7 @@
 package com.example.mogakserver.room.application.service;
 
 import com.example.mogakserver.common.exception.enums.ErrorCode;
+import com.example.mogakserver.common.exception.model.ConflictException;
 import com.example.mogakserver.common.exception.model.NotFoundException;
 import com.example.mogakserver.room.application.dto.TimerDTO;
 import com.example.mogakserver.room.application.response.RoomDTO;
@@ -205,6 +206,13 @@ public class RoomRetrieveService {
         return roomUserRepository.findByUserIdAndRoomId(userId, roomId)
                 .map(RoomUser::isHost)
                 .orElse(false);
+    }
+
+    public void isRoomNameAvailable(String roomName) {
+        boolean exists = roomRepository.existsByRoomName(roomName);
+        if (exists) {
+            throw new ConflictException(ErrorCode.ALREADY_EXIST_ROOM_EXCEPTION);
+        }
     }
 
 }
