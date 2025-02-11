@@ -1,14 +1,13 @@
 package com.example.mogakserver.user.api.controller;
 
 import com.example.mogakserver.common.exception.dto.ErrorResponse;
-import com.example.mogakserver.common.exception.dto.SuccessNonDataResponse;
 import com.example.mogakserver.common.exception.dto.SuccessResponse;
 import com.example.mogakserver.common.exception.enums.SuccessCode;
 import com.example.mogakserver.common.util.resolver.user.UserId;
 import com.example.mogakserver.room.application.response.ScreenShareUsersListDTO;
 import com.example.mogakserver.user.application.response.RankingDTO;
 import com.example.mogakserver.user.application.response.RankingListDTO;
-import com.example.mogakserver.user.application.service.UserRankingScheduler;
+import com.example.mogakserver.roomuser.application.response.UserRoomsListDTO;
 import com.example.mogakserver.user.application.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -18,14 +17,17 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/")
 @RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
-    private final UserRankingScheduler userRankingScheduler;
+
     @Operation(summary = "[JWT] 랭킹 리스트 조회", description = "랭킹 리스트 조회 api 입니다")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "랭킹 리스트 조회 성공", content = @Content(schema = @Schema(implementation = ScreenShareUsersListDTO.class))),
@@ -35,7 +37,7 @@ public class UserController {
     @SecurityRequirement(name = "JWT Auth")
     @GetMapping("/rankings")
     public SuccessResponse<RankingListDTO> getRankingList(
-            @Parameter(hidden = true) @UserId Long userId,
+            @Parameter(hidden = true, required = false) @UserId Long userId,
             @Parameter(name = "page", description = "페이지 ") @RequestParam(value = "page") int page,
             @Parameter(name = "size", description = "페이지 ") @RequestParam(value = "size") int size
     ) {

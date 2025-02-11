@@ -2,15 +2,19 @@ package com.example.mogakserver.user.application.service;
 
 import com.example.mogakserver.common.exception.enums.ErrorCode;
 import com.example.mogakserver.common.exception.model.NotFoundException;
+import com.example.mogakserver.room.domain.repository.JpaRoomRepository;
+import com.example.mogakserver.roomuser.infra.repository.JpaRoomUserRepository;
 import com.example.mogakserver.user.application.response.RankingDTO;
 import com.example.mogakserver.user.application.response.RankingListDTO;
 import com.example.mogakserver.user.domain.entity.User;
 import com.example.mogakserver.user.infra.repository.JpaUserRepository;
+import com.example.mogakserver.worktime.domain.repository.JpaWorkTimeRepository;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -19,13 +23,17 @@ import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class UserService {
 
     private final RedisTemplate<String, String> redisTemplate;
     private final JpaUserRepository userRepository;
+    private final JpaRoomRepository roomRepository;
+    private final JpaWorkTimeRepository workTimeRepository;
     private static final String RANKING_KEY = "user_ranking";
+    private final JpaRoomUserRepository roomUserRepository;
 
-
+    @Transactional(readOnly=true)
     public RankingListDTO getPagedRanking(int page, int size) {
         long start = (long) (page - 1) * size;
         long end = start + size - 1;
@@ -62,6 +70,8 @@ public class UserService {
         }
         return rankings;
     }
+
+    @Transactional(readOnly = true)
     public RankingDTO getUserRanking(Long userId) {
         //0부터 시작
         Long rankIndex = redisTemplate.opsForZSet().reverseRank(RANKING_KEY, userId.toString());
