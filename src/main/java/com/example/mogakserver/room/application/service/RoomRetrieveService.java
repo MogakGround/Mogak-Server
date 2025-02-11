@@ -1,8 +1,12 @@
 package com.example.mogakserver.room.application.service;
 
+import com.example.mogakserver.common.exception.enums.ErrorCode;
+import com.example.mogakserver.common.exception.model.NotFoundException;
 import com.example.mogakserver.room.application.dto.TimerDTO;
 import com.example.mogakserver.room.application.response.ScreenShareUsersListDTO;
 import com.example.mogakserver.room.application.response.TimerListDTO;
+import com.example.mogakserver.user.domain.entity.User;
+import com.example.mogakserver.user.infra.repository.JpaUserRepository;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -18,6 +22,7 @@ import java.util.stream.Collectors;
 public class RoomRetrieveService {
     private static final String SCREEN_SHARE_KEY_PREFIX = "screen-share-room-";
     private final RedisTemplate<String, String> redisTemplate;
+    private final JpaUserRepository jpaUserRepository;
 
     @Transactional(readOnly = true)
     public ScreenShareUsersListDTO getScreenShareUsers(Long roomId, int page, int size) {
@@ -89,6 +94,9 @@ public class RoomRetrieveService {
                 //userId 추출
                 String userIdStr = fieldStr.replace("-elapsedTime", "");
                 Long userId = Long.parseLong(userIdStr);
+                User user = jpaUserRepository.findById(userId).orElseThrow(()-> new NotFoundException(ErrorCode.USER_NOT_FOUND_EXCEPTION));
+                String userNickName = user.getNickName();
+
 
                 String elapsedTimeStr = (String) redisTemplate.opsForHash().get(key, userId + "-elapsedTime");
                 String isRunningStr = (String) redisTemplate.opsForHash().get(key, userId + "-isRunning");
@@ -103,6 +111,7 @@ public class RoomRetrieveService {
 
                 timerList.add(TimerDTO.builder()
                         .userId(userId)
+                        .userNickname(userNickName)
                         .hour(hour)
                         .min(min)
                         .sec(sec)
