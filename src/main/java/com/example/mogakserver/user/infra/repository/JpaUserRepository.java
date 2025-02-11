@@ -16,4 +16,6 @@ public interface JpaUserRepository extends JpaRepository<User, Long> {
 
     @Query("SELECT u FROM User u WHERE u.modifiedAt >= :cutoff")
     Page<User> findUsersUpdatedLast30Minutes(@Param("cutoff") LocalDateTime cutoff, Pageable pageable);
+
+    boolean existsByNickName(String nickName);
 }
