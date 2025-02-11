@@ -4,6 +4,8 @@ import com.example.mogakserver.common.exception.dto.ErrorResponse;
 import com.example.mogakserver.common.exception.dto.SuccessResponse;
 import com.example.mogakserver.common.exception.enums.SuccessCode;
 import com.example.mogakserver.common.util.resolver.user.UserId;
+import com.example.mogakserver.room.application.response.RoomDTO;
+import com.example.mogakserver.room.application.response.RoomListDTO;
 import com.example.mogakserver.room.application.response.ScreenShareUsersListDTO;
 import com.example.mogakserver.room.application.response.TimerListDTO;
 import com.example.mogakserver.room.application.service.RoomRetrieveService;
@@ -16,6 +18,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/room")
@@ -55,5 +59,56 @@ public class RoomRetrieveController {
             @Parameter(name = "size", description = "페이지 ") @RequestParam(value = "size") int size
     ) {
         return SuccessResponse.success(SuccessCode.GET_PAGED_TIMERS_SUCCESS, roomRetrieveService.getPagedTimers(roomId,page,size));
+    }
+
+    @Operation(summary = "모각방 전체 조회", description = "모든 모각방을 조회하는 API입니다")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "모각방 전체 조회 성공",
+                    content = @Content(schema = @Schema(implementation = RoomListDTO.class))),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터입니다",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류입니다.",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping
+    public SuccessResponse<RoomListDTO> getAllRooms(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "12") int size,
+            @RequestParam(required = false) List<String> workHours
+    ) {
+        RoomListDTO roomListDTO = roomRetrieveService.getAllRooms(page, size, workHours);
+        return SuccessResponse.success(SuccessCode.GET_PAGED_ROOMS_SUCCESS, roomListDTO);
+    }
+
+    @Operation(summary = "[JWT] 모각방 단일 조회", description = "특정 모각방을 조회하는 API입니다")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "모각방 단일 조회 성공",
+                    content = @Content(schema = @Schema(implementation = SuccessResponse.class))),
+            @ApiResponse(responseCode = "404", description = "존재하지 않는 모각방입니다",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류입니다.",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @SecurityRequirement(name = "JWT Auth")
+    @GetMapping("/{roomId}")
+    public SuccessResponse<RoomDTO> getRoom(
+            @Parameter(hidden = true) @UserId Long userId,
+            @PathVariable Long roomId
+    ) {
+        RoomDTO roomDTO = roomRetrieveService.getRoomById(userId, roomId);
+        return SuccessResponse.success(SuccessCode.GET_ROOM_SUCCESS, roomDTO);
+    }
+
+    @Operation(summary = "최근 모각방 top4 조회", description = "최근에 생성된 4개의 모각방을 조회하는 API입니다")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "최근 모각방 top4 조회 성공",
+                    content = @Content(schema = @Schema(implementation = SuccessResponse.class))),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류입니다.",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping("/recent")
+    public SuccessResponse<List<RoomDTO>> getRecentRooms() {
+        List<RoomDTO> recentRooms = roomRetrieveService.getRecentRooms();
+        return SuccessResponse.success(SuccessCode.GET_RECENT_ROOMS_SUCCESS, recentRooms);
     }
 }

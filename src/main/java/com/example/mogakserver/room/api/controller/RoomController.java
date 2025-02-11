@@ -72,44 +72,6 @@ public class RoomController {
         return SuccessNonDataResponse.success(SuccessCode.UPDATE_ROOM_SUCCESS);
     }
 
-    @Operation(summary = "모각방 전체 조회", description = "모든 모각방을 조회하는 API입니다")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "모각방 전체 조회 성공",
-                    content = @Content(schema = @Schema(implementation = RoomListDTO.class))),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터입니다",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "500", description = "서버 내부 오류입니다.",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    })
-    @GetMapping
-    public SuccessResponse<RoomListDTO> getAllRooms(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "12") int size,
-            @RequestParam(required = false) List<String> workHours
-    ) {
-        RoomListDTO roomListDTO = roomService.getAllRooms(page, size, workHours);
-        return SuccessResponse.success(SuccessCode.GET_PAGED_ROOMS_SUCCESS, roomListDTO);
-    }
-
-    @Operation(summary = "[JWT] 모각방 단일 조회", description = "특정 모각방을 조회하는 API입니다")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "모각방 단일 조회 성공",
-                    content = @Content(schema = @Schema(implementation = SuccessResponse.class))),
-            @ApiResponse(responseCode = "404", description = "존재하지 않는 모각방입니다",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "500", description = "서버 내부 오류입니다.",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    })
-    @SecurityRequirement(name = "JWT Auth")
-    @GetMapping("/{roomId}")
-    public SuccessResponse<RoomDTO> getRoom(
-            @Parameter(hidden = true) @UserId Long userId,
-            @PathVariable Long roomId
-    ) {
-        RoomDTO roomDTO = roomService.getRoomById(userId, roomId);
-        return SuccessResponse.success(SuccessCode.GET_ROOM_SUCCESS, roomDTO);
-    }
-
     @Operation(summary = "[JWT] 모각방 삭제", description = "모각방을 삭제하는 API입니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "모각방 삭제 성공",
@@ -129,18 +91,5 @@ public class RoomController {
     ) {
         roomService.deleteRoom(userId, roomId);
         return SuccessNonDataResponse.success(SuccessCode.ROOM_DELETION_SUCCESS);
-    }
-
-    @Operation(summary = "최근 모각방 top4 조회", description = "최근에 생성된 4개의 모각방을 조회하는 API입니다")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "최근 모각방 top4 조회 성공",
-                    content = @Content(schema = @Schema(implementation = SuccessResponse.class))),
-            @ApiResponse(responseCode = "500", description = "서버 내부 오류입니다.",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    })
-    @GetMapping("/recent")
-    public SuccessResponse<List<RoomDTO>> getRecentRooms() {
-        List<RoomDTO> recentRooms = roomService.getRecentRooms();
-        return SuccessResponse.success(SuccessCode.GET_RECENT_ROOMS_SUCCESS, recentRooms);
     }
 }
