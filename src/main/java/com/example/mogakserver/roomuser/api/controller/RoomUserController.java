@@ -7,6 +7,7 @@ import com.example.mogakserver.common.exception.enums.SuccessCode;
 import com.example.mogakserver.common.util.resolver.user.UserId;
 import com.example.mogakserver.room.application.response.ScreenShareUsersListDTO;
 import com.example.mogakserver.roomuser.application.response.MyStatusResponseDTO;
+import com.example.mogakserver.roomuser.application.response.UserRoomsListDTO;
 import com.example.mogakserver.roomuser.application.service.RoomUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -16,10 +17,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/room")
@@ -56,4 +54,21 @@ public class RoomUserController {
         MyStatusResponseDTO response = roomUserService.getStatus(userId, roomId);
         return SuccessResponse.success(SuccessCode.GET_MY_STATUS_IN_ROOM_SUCCESS, response);
     }
+
+    @Operation(summary = "[JWT] 내가 만든 모각방 리스트 조회", description = "내가 만든 모각방 리스트 조회api입니다")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "내가 만든 모각방 리스트 조회 성공", content = @Content(schema = @Schema(implementation = ScreenShareUsersListDTO.class))),
+            @ApiResponse(responseCode = "404", description = "유저가 존재하지 않습니다", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류 입니다.", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+    })
+    @SecurityRequirement(name = "JWT Auth")
+    @GetMapping("/mypage/rooms/imade")
+    public SuccessResponse<UserRoomsListDTO> getRoomsMadeByMeList(
+            @Parameter(hidden = true) @UserId Long userId,
+            @Parameter(name = "page", description = "페이지 ") @RequestParam(value = "page") int page,
+            @Parameter(name = "size", description = "페이지 ") @RequestParam(value = "size") int size
+    ) {
+        return SuccessResponse.success(SuccessCode.GET_ROOMS_I_MADE_SUCCESS, roomUserService.getRoomListIMade(userId, page, size));
+    }
+
 }

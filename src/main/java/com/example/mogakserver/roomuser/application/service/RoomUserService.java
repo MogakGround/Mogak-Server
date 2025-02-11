@@ -2,21 +2,39 @@ package com.example.mogakserver.roomuser.application.service;
 
 import com.example.mogakserver.common.exception.enums.ErrorCode;
 import com.example.mogakserver.common.exception.model.NotFoundException;
+import com.example.mogakserver.room.domain.entity.Room;
+import com.example.mogakserver.room.domain.repository.JpaRoomRepository;
 import com.example.mogakserver.roomuser.application.response.MyStatusResponseDTO;
+import com.example.mogakserver.roomuser.application.response.UserRoomDTO;
+import com.example.mogakserver.roomuser.application.response.UserRoomsListDTO;
 import com.example.mogakserver.roomuser.domain.entity.RoomUser;
 import com.example.mogakserver.roomuser.infra.repository.JpaRoomUserRepository;
 import com.example.mogakserver.user.domain.entity.User;
 import com.example.mogakserver.user.infra.repository.JpaUserRepository;
+import com.example.mogakserver.worktime.domain.entity.WorkTime;
+import com.example.mogakserver.worktime.domain.repository.JpaWorkTimeRepository;
 import lombok.RequiredArgsConstructor;
+import org.jetbrains.annotations.NotNull;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
 @Transactional
 public class RoomUserService {
     private final JpaRoomUserRepository roomUserRepository;
+    private final JpaRoomRepository roomRepository;
+    private final JpaWorkTimeRepository workTimeRepository;
     private final JpaUserRepository userRepository;
     private final RedisTemplate<String, String> redisTemplate;
 
@@ -24,7 +42,7 @@ public class RoomUserService {
         RoomUser roomUser = roomUserRepository.findByUserIdAndRoomId(userId, roomId).orElseThrow(()->new NotFoundException(ErrorCode.NOT_FOUND_ROOM_EXCEPTION));
         roomUser.updateIsVideoLargeAllowed();
     }
-
+    @Transactional(readOnly = true)
     public MyStatusResponseDTO getStatus(Long userId, Long roomId) {
         String timerKey = "timer-room-" + roomId;
         String screenShareKey = "screen-share-room-" + roomId;
@@ -71,6 +89,74 @@ public class RoomUserService {
                 .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND_EXCEPTION));
         String nickName = user.getNickName();
         return nickName;
+    }
+
+    @Transactional(readOnly = true)
+    public UserRoomsListDTO getRoomListIMade(Long userId, int page, int size) {
+        List<RoomUser> roomUserList = roomUserRepository.findAllByUserId(userId);
+
+        if (roomUserList == null || roomUserList.isEmpty()) {
+            return UserRoomsListDTO.builder()
+                    .totalPage(0)
+                    .currentPage(page)
+                    .rooms(Collections.emptyList()) // 빈 리스트 반환
+                    .build();
+        }
+
+        List<Long> hostRoomIds = roomUserList.stream()
+                .filter(RoomUser::isHost)
+                .map(RoomUser::getRoomId)
+                .collect(Collectors.toList());
+
+        // 방장인 방이 없을 경우 빈 리스트 반환
+        if (hostRoomIds.isEmpty()) {
+            return UserRoomsListDTO.builder()
+                    .totalPage(0)
+                    .currentPage(page)
+                    .rooms(Collections.emptyList())
+                    .build();
+        }
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<Room> roomPage = roomRepository.findAllByIdIn(hostRoomIds, pageable);
+
+        Map<Long, List<String>> workHourMap = getWorkHourMap(hostRoomIds);
+
+        List<UserRoomDTO> roomDTOList = getUserMadeRoomDTOS(roomPage, workHourMap);
+
+        return UserRoomsListDTO.builder()
+                .totalPage(roomPage.getTotalPages())
+                .currentPage(roomPage.getNumber())
+                .rooms(roomDTOList)
+                .build();
+    }
+
+    @NotNull
+    private Map<Long, List<String>> getWorkHourMap(List<Long> hostRoomIds) {
+        Map<Long, List<String>> workHourMap = workTimeRepository.findAllByRoomIdIn(hostRoomIds)
+                .stream()
+                .collect(Collectors.groupingBy(
+                        WorkTime::getRoomId,
+                        Collectors.mapping(workTime -> workTime.getWorkHour().getValue(), Collectors.toList()) // ✅ Enum을 String으로 변환
+                ));
+        return workHourMap;
+    }
+
+    @NotNull
+    private static List<UserRoomDTO> getUserMadeRoomDTOS(Page<Room> roomPage, Map<Long, List<String>> workHourMap) {
+        List<UserRoomDTO> roomDTOList = roomPage.getContent().stream()
+                .map(room -> UserRoomDTO.builder()
+                        .roomId(room.getId())
+                        .roomName(room.getRoomName())
+                        .roomImgUrl(room.getRoomImgUrl())
+                        .roomExplain(room.getRoomExplain())
+                        .workHour(workHourMap.getOrDefault(room.getId(), Collections.emptyList()))
+                        .isLocked(room.isLocked())
+                        .roomPassword(room.getRoomPassword())
+                        .isHost(true)
+                        .build())
+                .collect(Collectors.toList());
+        return roomDTOList;
     }
 }
 

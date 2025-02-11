@@ -26,6 +26,7 @@ public enum ErrorCode {
 
     //404
     USER_NOT_FOUND_EXCEPTION(HttpStatus.NOT_FOUND, "해당 유저는 존재하지 않습니다."),
+    ROOM_NOT_FOUND_EXCEPTION(HttpStatus.NOT_FOUND, "해당 방은 존재하지 않습니다."),
     NOT_FOUND_RESOURCE_EXCEPTION(HttpStatus.NOT_FOUND, "해당 자원을 찾을 수 없습니다."),
     NOT_FOUND_VERIFICATION_CODE_EXCEPTION(HttpStatus.NOT_FOUND, "인증 코드가 존재하지 않습니다."),
     NOT_FOUND_ROOM_EXCEPTION(HttpStatus.NOT_FOUND, "해당 모각방이 존재하지 않습니다."),
