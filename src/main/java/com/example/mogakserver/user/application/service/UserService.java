@@ -3,6 +3,7 @@ package com.example.mogakserver.user.application.service;
 import com.example.mogakserver.common.exception.enums.ErrorCode;
 import com.example.mogakserver.common.exception.model.ConflictException;
 import com.example.mogakserver.common.exception.model.NotFoundException;
+import com.example.mogakserver.user.api.request.UpdateProfileRequestDTO;
 import com.example.mogakserver.user.application.response.MyProfileResponseDTO;
 import com.example.mogakserver.user.application.response.RankingDTO;
 import com.example.mogakserver.user.application.response.RankingListDTO;
@@ -98,18 +99,22 @@ public class UserService {
         Double todayAddedTime = redisTemplate.opsForZSet().score(RANKING_KEY, userId.toString());
 
         if (rankIndex == null || todayAddedTime == null) {
-            throw new NotFoundException(ErrorCode.USER_NOT_FOUND_EXCEPTION);
+            return new UserRankAndTime(0, 0);
         }
 
         return new UserRankAndTime(rankIndex.intValue() + 1, todayAddedTime.longValue());
     }
-
     private record UserRankAndTime(int rank, long totalSeconds) {}
+
+    public void updateUserProfile(Long userId, UpdateProfileRequestDTO updateProfileRequestDTO) {
+        isNicknameAvailable(updateProfileRequestDTO.getNickName());
+        User user = getUser(userId);
+        user.updateProfile(updateProfileRequestDTO.getNickName(), updateProfileRequestDTO.getPortfolioUrl());
+    }
     public void isNicknameAvailable(String nickname) {
         boolean exists = userRepository.existsByNickName(nickname);
         if (exists) {
             throw new ConflictException(ErrorCode.ALREADY_EXIST_NICKNAME_EXCEPTION);
         }
     }
-
 }

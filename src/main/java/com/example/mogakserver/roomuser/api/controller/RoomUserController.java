@@ -97,7 +97,7 @@ public class RoomUserController {
             @ApiResponse(responseCode = "500", description = "서버 내부 오류 입니다.", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
     })
     @SecurityRequirement(name = "JWT Auth")
-    @GetMapping("/mypage/rooms/7days")
+    @GetMapping("/mypage/rooms/sevendays")
     public SuccessResponse<MyPageUserRoomsListDTO> getRooms7DaysEnteredList(
             @Parameter(hidden = true) @UserId Long userId,
             @Parameter(name = "page", description = "페이지 ") @RequestParam(value = "page", defaultValue = "1") int page,

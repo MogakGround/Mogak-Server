@@ -5,10 +5,8 @@ import com.example.mogakserver.common.exception.dto.SuccessNonDataResponse;
 import com.example.mogakserver.common.exception.dto.SuccessResponse;
 import com.example.mogakserver.common.exception.enums.SuccessCode;
 import com.example.mogakserver.common.util.resolver.user.UserId;
-import com.example.mogakserver.room.application.response.RoomDTO;
-import com.example.mogakserver.room.application.dto.RoomRequestDTO;
-import com.example.mogakserver.room.application.dto.RoomUpdateDTO;
-import com.example.mogakserver.room.application.response.RoomListDTO;
+import com.example.mogakserver.room.api.request.RoomRequestDTO;
+import com.example.mogakserver.room.api.request.RoomUpdateDTO;
 import com.example.mogakserver.room.application.service.RoomService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -20,8 +18,6 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/room")
