@@ -5,9 +5,9 @@ import com.example.mogakserver.common.exception.dto.SuccessResponse;
 import com.example.mogakserver.common.exception.enums.SuccessCode;
 import com.example.mogakserver.common.util.resolver.user.UserId;
 import com.example.mogakserver.room.application.response.ScreenShareUsersListDTO;
+import com.example.mogakserver.user.application.response.MyProfileResponseDTO;
 import com.example.mogakserver.user.application.response.RankingDTO;
 import com.example.mogakserver.user.application.response.RankingListDTO;
-import com.example.mogakserver.roomuser.application.response.UserRoomsListDTO;
 import com.example.mogakserver.user.application.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -56,4 +56,19 @@ public class UserController {
     ) {
         return SuccessResponse.success(SuccessCode.GET_RANKING_SUCCESS, userService.getUserRanking(userId));
     }
+
+    @Operation(summary = "[JWT] 내 프로필 조회", description = "내 프로필 조회 api 입니다")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "프로필 조회 성공", content = @Content(schema = @Schema(implementation = ScreenShareUsersListDTO.class))),
+            @ApiResponse(responseCode = "404", description = "유저가 존재하지 않습니다", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류 입니다.", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+    })
+    @SecurityRequirement(name = "JWT Auth")
+    @GetMapping("/my/profile")
+    public SuccessResponse<MyProfileResponseDTO> getMyProfile(
+            @Parameter(hidden = true) @UserId Long userId
+    ) {
+        return SuccessResponse.success(SuccessCode.GET_RANKING_SUCCESS, userService.getUserProfile(userId));
+    }
+
 }

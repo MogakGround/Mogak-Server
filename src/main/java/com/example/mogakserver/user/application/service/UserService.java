@@ -2,13 +2,11 @@ package com.example.mogakserver.user.application.service;
 
 import com.example.mogakserver.common.exception.enums.ErrorCode;
 import com.example.mogakserver.common.exception.model.NotFoundException;
-import com.example.mogakserver.room.domain.repository.JpaRoomRepository;
-import com.example.mogakserver.roomuser.infra.repository.JpaRoomUserRepository;
+import com.example.mogakserver.user.application.response.MyProfileResponseDTO;
 import com.example.mogakserver.user.application.response.RankingDTO;
 import com.example.mogakserver.user.application.response.RankingListDTO;
 import com.example.mogakserver.user.domain.entity.User;
 import com.example.mogakserver.user.infra.repository.JpaUserRepository;
-import com.example.mogakserver.worktime.domain.repository.JpaWorkTimeRepository;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -28,12 +26,9 @@ public class UserService {
 
     private final RedisTemplate<String, String> redisTemplate;
     private final JpaUserRepository userRepository;
-    private final JpaRoomRepository roomRepository;
-    private final JpaWorkTimeRepository workTimeRepository;
     private static final String RANKING_KEY = "user_ranking";
-    private final JpaRoomUserRepository roomUserRepository;
 
-    @Transactional(readOnly=true)
+    @Transactional(readOnly = true)
     public RankingListDTO getPagedRanking(int page, int size) {
         long start = (long) (page - 1) * size;
         long end = start + size - 1;
@@ -49,7 +44,6 @@ public class UserService {
         }
 
         List<RankingDTO> rankings = getRankingDTOS((int) start, rankingSet);
-
         return new RankingListDTO(rankings, totalPages, page);
     }
 
@@ -58,40 +52,57 @@ public class UserService {
         List<RankingDTO> rankings = new ArrayList<>();
         int rank = start + 1;
         for (ZSetOperations.TypedTuple<String> entry : rankingSet) {
-
-            long totalSeconds = entry.getScore().longValue();
-            int hour = (int) (totalSeconds / 3600);
-            int min = (int) ((totalSeconds % 3600) / 60);
-            int sec = (int) (totalSeconds % 60);
-
             Long userId = Long.parseLong(entry.getValue());
-            User user = userRepository.findById(userId).orElseThrow(()->new NotFoundException(ErrorCode.USER_NOT_FOUND_EXCEPTION));
-            rankings.add(new RankingDTO(Long.parseLong(entry.getValue()), user.getNickName(),rank++, hour, min, sec));
+            rankings.add(convertToRankingDTO(userId, rank++, entry.getScore().longValue()));
         }
         return rankings;
     }
 
+    private User getUser(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND_EXCEPTION));
+    }
+
+    private RankingDTO convertToRankingDTO(Long userId, int rank, long totalSeconds) {
+        User user = getUser(userId);
+        return new RankingDTO(userId, user.getNickName(), rank,
+                (int) (totalSeconds / 3600),
+                (int) ((totalSeconds % 3600) / 60),
+                (int) (totalSeconds % 60));
+    }
+
     @Transactional(readOnly = true)
     public RankingDTO getUserRanking(Long userId) {
-        //0부터 시작
-        Long rankIndex = redisTemplate.opsForZSet().reverseRank(RANKING_KEY, userId.toString());
+        UserRankAndTime rankAndTime = getUserRankAndTime(userId);
+        return convertToRankingDTO(userId, rankAndTime.rank(), rankAndTime.totalSeconds());
+    }
 
+    @Transactional(readOnly = true)
+    public MyProfileResponseDTO getUserProfile(Long userId) {
+        User user = getUser(userId);
+        UserRankAndTime rankAndTime = getUserRankAndTime(userId);
+
+        return MyProfileResponseDTO.builder()
+                .nickName(user.getNickName())
+                .portfolioUrl(user.getPortfolioUrl())
+                .rank(rankAndTime.rank())
+                .hour((int) (rankAndTime.totalSeconds() / 3600))
+                .min((int) ((rankAndTime.totalSeconds() % 3600) / 60))
+                .sec((int) (rankAndTime.totalSeconds() % 60))
+                .build();
+    }
+
+    private UserRankAndTime getUserRankAndTime(Long userId) {
+        Long rankIndex = redisTemplate.opsForZSet().reverseRank(RANKING_KEY, userId.toString());
         Double todayAddedTime = redisTemplate.opsForZSet().score(RANKING_KEY, userId.toString());
 
         if (rankIndex == null || todayAddedTime == null) {
             throw new NotFoundException(ErrorCode.USER_NOT_FOUND_EXCEPTION);
         }
 
-        int rank = rankIndex.intValue() + 1; //0based-> 1based
-        long totalSeconds = todayAddedTime.longValue();
-        int hour = (int) (totalSeconds / 3600);
-        int min = (int) ((totalSeconds % 3600) / 60);
-        int sec = (int) (totalSeconds % 60);
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND_EXCEPTION));
-
-        return new RankingDTO(userId, user.getNickName(), rank, hour, min, sec);
+        return new UserRankAndTime(rankIndex.intValue() + 1, todayAddedTime.longValue());
     }
+
+    private record UserRankAndTime(int rank, long totalSeconds) {}
 }
 
