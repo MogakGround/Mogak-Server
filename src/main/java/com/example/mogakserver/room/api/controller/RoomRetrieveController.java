@@ -1,6 +1,7 @@
 package com.example.mogakserver.room.api.controller;
 
 import com.example.mogakserver.common.exception.dto.ErrorResponse;
+import com.example.mogakserver.common.exception.dto.SuccessNonDataResponse;
 import com.example.mogakserver.common.exception.dto.SuccessResponse;
 import com.example.mogakserver.common.exception.enums.SuccessCode;
 import com.example.mogakserver.common.util.resolver.user.UserId;
@@ -110,5 +111,21 @@ public class RoomRetrieveController {
     public SuccessResponse<List<RoomDTO>> getRecentRooms() {
         List<RoomDTO> recentRooms = roomRetrieveService.getRecentRooms();
         return SuccessResponse.success(SuccessCode.GET_RECENT_ROOMS_SUCCESS, recentRooms);
+    }
+
+
+    @Operation(summary = "방 이름 중복 검사", description = "방 이름 중복 검사 API입니다")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "사용 가능한 방 이름입니다.",
+                    content = @Content(schema = @Schema(implementation = SuccessNonDataResponse.class))),
+            @ApiResponse(responseCode = "409", description = "이미 사용 중인 방 이름입니다.",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류입니다.",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping("/check-room-name")
+    public SuccessNonDataResponse checkRoomName(@RequestParam String roomName) {
+        roomRetrieveService.isRoomNameAvailable(roomName);
+        return SuccessNonDataResponse.success(SuccessCode.GET_AVAILABLE_ROOM_NAME);
     }
 }

@@ -17,4 +17,5 @@ public interface JpaRoomRepository extends JpaRepository<Room, Long> {
 
     List<Room> findTop4ByOrderByCreatedAtDesc();
 
+    boolean existsByRoomName(String roomName);
 }
