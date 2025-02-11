@@ -22,6 +22,7 @@ public enum ErrorCode {
     TOKEN_TIME_EXPIRED_EXCEPTION(HttpStatus.UNAUTHORIZED, "토큰이 만료되었습니다. 다시 로그인 해주세요."),
 
     //403
+    ROOM_PERMISSION_DENIED(HttpStatus.FORBIDDEN, "방 관련 권한이 없습니다."),
     ROOM_USER_NOT_MATCH(HttpStatus.FORBIDDEN, "유저와 방이 일치하지 않습니다"),
 
     //404

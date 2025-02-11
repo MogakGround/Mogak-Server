@@ -8,6 +8,7 @@ import com.example.mogakserver.common.util.resolver.user.UserId;
 import com.example.mogakserver.room.application.response.ScreenShareUsersListDTO;
 import com.example.mogakserver.roomuser.application.response.MyStatusResponseDTO;
 import com.example.mogakserver.roomuser.application.response.UserRoomsListDTO;
+import com.example.mogakserver.roomuser.application.response.RoomUserListDTO;
 import com.example.mogakserver.roomuser.application.service.RoomUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -71,4 +72,22 @@ public class RoomUserController {
         return SuccessResponse.success(SuccessCode.GET_ROOMS_I_MADE_SUCCESS, roomUserService.getRoomListIMade(userId, page, size));
     }
 
+    @Operation(summary = "[JWT] 모각방 참가 인원 명단 조회", description = "특정 모각방에 속한 사용자 명단을 조회하는 API입니다")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "모각방 명단 조회 성공",
+                    content = @Content(schema = @Schema(implementation = RoomUserListDTO.class))),
+            @ApiResponse(responseCode = "404", description = "존재하지 않는 모각방입니다",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류입니다.",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @SecurityRequirement(name = "JWT Auth")
+    @GetMapping("/{roomId}/participants")
+    public SuccessResponse<RoomUserListDTO> getRoomUsers(
+            @Parameter(hidden = true) @UserId Long userId,
+            @PathVariable Long roomId
+    ) {
+        RoomUserListDTO roomUserList = roomUserService.getRoomUsers(userId, roomId);
+        return SuccessResponse.success(SuccessCode.GET_ROOM_USERS_SUCCESS, roomUserList);
+    }
 }

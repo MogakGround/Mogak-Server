@@ -3,12 +3,24 @@ package com.example.mogakserver.room.application.service;
 import com.example.mogakserver.common.exception.enums.ErrorCode;
 import com.example.mogakserver.common.exception.model.NotFoundException;
 import com.example.mogakserver.room.application.dto.TimerDTO;
+import com.example.mogakserver.room.application.response.RoomDTO;
+import com.example.mogakserver.room.application.response.RoomListDTO;
 import com.example.mogakserver.room.application.response.ScreenShareUsersListDTO;
 import com.example.mogakserver.room.application.response.TimerListDTO;
 import com.example.mogakserver.user.domain.entity.User;
 import com.example.mogakserver.user.infra.repository.JpaUserRepository;
+import com.example.mogakserver.room.domain.entity.Room;
+import com.example.mogakserver.room.infra.repository.JpaRoomRepository;
+import com.example.mogakserver.roomimg.domain.entity.RoomImgType;
+import com.example.mogakserver.roomimg.infra.repository.JpaRoomImgRepository;
+import com.example.mogakserver.roomuser.domain.entity.RoomUser;
+import com.example.mogakserver.roomuser.infra.repository.JpaRoomUserRepository;
+import com.example.mogakserver.worktime.domain.entity.WorkHour;
+import com.example.mogakserver.worktime.infra.repository.JpaWorkTimeRepository;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +33,10 @@ import java.util.stream.Collectors;
 @Transactional
 public class RoomRetrieveService {
     private static final String SCREEN_SHARE_KEY_PREFIX = "screen-share-room-";
+    private final JpaRoomRepository roomRepository;
+    private final JpaRoomImgRepository roomImgRepository;
+    private final JpaWorkTimeRepository workTimeRepository;
+    private final JpaRoomUserRepository roomUserRepository;
     private final RedisTemplate<String, String> redisTemplate;
     private final JpaUserRepository jpaUserRepository;
 
@@ -130,4 +146,72 @@ public class RoomRetrieveService {
                 : timerList.subList(start, end);
         return pagedTimerList;
     }
+
+    @Transactional(readOnly = true)
+    public RoomListDTO getAllRooms(int page, int size, List<String> workHourList) {
+        size = size > 0 ? size : 12;
+        PageRequest pageRequest = PageRequest.of(page - 1, size);
+        Page<Room> roomPage;
+
+        if (workHourList == null || workHourList.isEmpty()) {
+            roomPage = roomRepository.findAll(pageRequest);
+        } else {
+            List<WorkHour> workHours = workHourList.stream()
+                    .map(WorkHour::valueOf)
+                    .collect(Collectors.toList());
+            roomPage = roomRepository.findRoomsByWorkHours(workHours, pageRequest);
+
+        }
+
+        List<RoomDTO> roomDTOs = roomPage.getContent().stream()
+                .map(room -> toRoomDTO(null, room))
+                .collect(Collectors.toList());
+
+        return RoomListDTO.builder()
+                .rooms(roomDTOs)
+                .totalPages(roomPage.getTotalPages())
+                .currentPage(page)
+                .totalRooms(roomPage.getTotalElements())
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public RoomDTO getRoomById(Long userId, Long roomId) {
+        Room room = roomRepository.findById(roomId)
+                .orElseThrow(() -> new NotFoundException(ErrorCode.NOT_FOUND_ROOM_EXCEPTION));
+
+        return toRoomDTO(userId, room);
+    }
+
+    @Transactional(readOnly = true)
+    public List<RoomDTO> getRecentRooms() {
+        return roomRepository.findTop4ByOrderByCreatedAtDesc().stream()
+                .map(room -> toRoomDTO(null, room))
+                .collect(Collectors.toList());
+    }
+
+    private RoomDTO toRoomDTO(Long userId, Room room) {
+        return RoomDTO.builder()
+                .roomId(room.getId())
+                .roomName(room.getRoomName())
+                .roomExplain(room.getRoomExplain())
+                .isLocked(room.isLocked())
+                .userCnt(room.getUserCnt())
+                .roomImg(getRoomImgUrl(room.getId()))
+                .workHours(workTimeRepository.findWorkHoursByRoomId(room.getId()))
+                .isHost(userId != null && isUserHost(userId, room.getId()))
+                .build();
+    }
+
+    private String getRoomImgUrl(Long roomId) {
+        RoomImgType roomImgType = roomImgRepository.findRoomImgTypeByRoomId(roomId);
+        return roomImgType.getRoomImgUrl();
+    }
+
+    private boolean isUserHost(Long userId, Long roomId) {
+        return roomUserRepository.findByUserIdAndRoomId(userId, roomId)
+                .map(RoomUser::isHost)
+                .orElse(false);
+    }
+
 }

@@ -9,4 +9,7 @@ import java.util.Optional;
 public interface JpaRoomUserRepository extends JpaRepository<RoomUser, Long> {
     Optional<RoomUser> findByUserIdAndRoomId(Long userId, Long roomId);
     List<RoomUser> findAllByUserId(Long userId);
+    List<RoomUser> findByRoomId(Long roomId);
+
+    void deleteByRoomId(Long roomId);
 }

@@ -26,9 +26,11 @@ public class WorkTime {
     @Enumerated(value = EnumType.STRING)
     @NotNull
     private WorkHour workHour;
+
     @CreatedDate
     @Column(updatable = false)
     private LocalDateTime createdAt;
+
     @LastModifiedDate
     private LocalDateTime modifiedAt;
 }

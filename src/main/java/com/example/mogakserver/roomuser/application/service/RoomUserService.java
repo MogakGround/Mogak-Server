@@ -7,6 +7,8 @@ import com.example.mogakserver.room.domain.repository.JpaRoomRepository;
 import com.example.mogakserver.roomuser.application.response.MyStatusResponseDTO;
 import com.example.mogakserver.roomuser.application.response.UserRoomDTO;
 import com.example.mogakserver.roomuser.application.response.UserRoomsListDTO;
+import com.example.mogakserver.roomuser.application.response.RoomUserDTO;
+import com.example.mogakserver.roomuser.application.response.RoomUserListDTO;
 import com.example.mogakserver.roomuser.domain.entity.RoomUser;
 import com.example.mogakserver.roomuser.infra.repository.JpaRoomUserRepository;
 import com.example.mogakserver.user.domain.entity.User;
@@ -148,7 +150,6 @@ public class RoomUserService {
                 .map(room -> UserRoomDTO.builder()
                         .roomId(room.getId())
                         .roomName(room.getRoomName())
-                        .roomImgUrl(room.getRoomImgUrl())
                         .roomExplain(room.getRoomExplain())
                         .workHour(workHourMap.getOrDefault(room.getId(), Collections.emptyList()))
                         .isLocked(room.isLocked())
@@ -157,6 +158,28 @@ public class RoomUserService {
                         .build())
                 .collect(Collectors.toList());
         return roomDTOList;
+    }
+    public RoomUserListDTO getRoomUsers(Long userId, Long roomId) {
+        boolean isParticipant = roomUserRepository.findByUserIdAndRoomId(userId, roomId).isPresent();
+        if (!isParticipant) {
+            throw new NotFoundException(ErrorCode.ROOM_PERMISSION_DENIED);
+        }
+        
+        List<RoomUserDTO> users = roomUserRepository.findByRoomId(roomId).stream()
+                .map(roomUser -> {
+                    User user = userRepository.findById(roomUser.getUserId())
+                            .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND_EXCEPTION));
+                    return RoomUserDTO.builder()
+                            .userId(user.getId())
+                            .nickName(user.getNickName())
+                            .build();
+                })
+                .collect(Collectors.toList());
+
+        return RoomUserListDTO.builder()
+                .users(users)
+                .userCnt(users.size())
+                .build();
     }
 }
 
