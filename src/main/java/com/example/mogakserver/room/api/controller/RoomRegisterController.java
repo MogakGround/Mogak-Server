@@ -7,7 +7,7 @@ import com.example.mogakserver.common.exception.enums.SuccessCode;
 import com.example.mogakserver.common.util.resolver.user.UserId;
 import com.example.mogakserver.room.api.request.RoomRequestDTO;
 import com.example.mogakserver.room.api.request.RoomUpdateDTO;
-import com.example.mogakserver.room.application.service.RoomService;
+import com.example.mogakserver.room.application.service.RoomRegisterService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -22,8 +22,8 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/room")
 @RequiredArgsConstructor
-public class RoomController {
-    private final RoomService roomService;
+public class RoomRegisterController {
+    private final RoomRegisterService roomRegisterService;
 
     @Operation(summary = "[JWT] 모각방 생성", description = "새로운 모각방을 생성하는 API입니다")
     @ApiResponses({
@@ -40,7 +40,7 @@ public class RoomController {
             @Parameter(hidden = true) @UserId Long userId,
             @Valid @RequestBody RoomRequestDTO roomRequestDTO
     ) {
-        roomService.createRoom(userId, roomRequestDTO);
+        roomRegisterService.createRoom(userId, roomRequestDTO);
         return SuccessNonDataResponse.success(SuccessCode.ROOM_CREATION_SUCCESS);
     }
 
@@ -64,7 +64,7 @@ public class RoomController {
             @PathVariable Long roomId,
             @Valid @RequestBody RoomUpdateDTO roomUpdateDTO
     ) {
-        roomService.updateRoom(userId, roomId, roomUpdateDTO);
+        roomRegisterService.updateRoom(userId, roomId, roomUpdateDTO);
         return SuccessNonDataResponse.success(SuccessCode.UPDATE_ROOM_SUCCESS);
     }
 
@@ -85,7 +85,7 @@ public class RoomController {
             @Parameter(hidden = true) @UserId Long userId,
             @PathVariable Long roomId
     ) {
-        roomService.deleteRoom(userId, roomId);
+        roomRegisterService.deleteRoom(userId, roomId);
         return SuccessNonDataResponse.success(SuccessCode.ROOM_DELETION_SUCCESS);
     }
 }
