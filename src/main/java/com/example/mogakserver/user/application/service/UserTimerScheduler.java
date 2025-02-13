@@ -6,7 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Set;
 
@@ -21,6 +20,7 @@ public class UserTimerScheduler {
     @Scheduled(cron = "0 0 5 * * ?")
     public void resetUserTimers() {
         resetUserTodayAddedTime();
+        handleRunningTimers();
         clearRedisTimer();
     }
 
@@ -31,10 +31,38 @@ public class UserTimerScheduler {
         });
     }
 
+    private void handleRunningTimers() {
+        Set<String> timerKeys = redisTemplate.keys(TIMER_KEY_PREFIX + "*");
+        if (timerKeys != null && !timerKeys.isEmpty()) {
+            for (String key : timerKeys) {
+                Set<Object> userFields = redisTemplate.opsForHash().keys(key);
+                for (Object field : userFields) {
+                    String fieldStr = (String) field;
+                    if (fieldStr.endsWith("-isRunning")) {
+                        String userIdStr = fieldStr.replace("-isRunning", "");
+                        boolean isRunning = "true".equals(redisTemplate.opsForHash().get(key, fieldStr));
+
+                        if (isRunning) {
+                            redisTemplate.opsForHash().put(key, userIdStr + "-startTime", String.valueOf(System.currentTimeMillis()));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     private void clearRedisTimer() {
         Set<String> timerKeys = redisTemplate.keys(TIMER_KEY_PREFIX + "*");
         if (timerKeys != null && !timerKeys.isEmpty()) {
-            redisTemplate.delete(timerKeys);
+            for (String key : timerKeys) {
+                Set<Object> userFields = redisTemplate.opsForHash().keys(key);
+                for (Object field : userFields) {
+                    String fieldStr = (String) field;
+                    if (fieldStr.endsWith("-elapsedTime")) {
+                        redisTemplate.opsForHash().delete(key, field);
+                    }
+                }
+            }
         }
     }
 }
