@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class RoomService {
+public class RoomRegisterService {
     private final JpaRoomRepository roomRepository;
     private final JpaRoomImgRepository roomImgRepository;
     private final JpaWorkTimeRepository workTimeRepository;
