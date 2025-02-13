@@ -49,6 +49,11 @@ public class User {
         }
         this.todayAddedTime = todayAddedTime+updateAddedTime;
     }
+
+    public void resetTodayAddedTime() {
+        this.todayAddedTime = 0L;
+    }
+
     public void updateProfile(String nickName, String portfolioUrl){
         this.nickName = nickName;
         this.portfolioUrl = portfolioUrl;
