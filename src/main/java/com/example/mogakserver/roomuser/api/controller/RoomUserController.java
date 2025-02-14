@@ -6,8 +6,10 @@ import com.example.mogakserver.common.exception.dto.SuccessResponse;
 import com.example.mogakserver.common.exception.enums.SuccessCode;
 import com.example.mogakserver.common.util.resolver.user.UserId;
 import com.example.mogakserver.room.application.response.ScreenShareUsersListDTO;
+import com.example.mogakserver.roomuser.api.request.RoomEnterRequestDTO;
 import com.example.mogakserver.roomuser.application.response.MyStatusResponseDTO;
 import com.example.mogakserver.roomuser.application.response.MyPageUserRoomsListDTO;
+import com.example.mogakserver.roomuser.application.response.RoomEnterResponseDTO;
 import com.example.mogakserver.roomuser.application.response.RoomUserListDTO;
 import com.example.mogakserver.roomuser.application.service.RoomUserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,7 +34,7 @@ public class RoomUserController {
             @ApiResponse(responseCode = "500", description = "서버 내부 오류 입니다.", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
     })
     @SecurityRequirement(name = "JWT Auth")
-    @GetMapping("/{roomId}/screenshare/large")
+    @PatchMapping("/{roomId}/screenshare/large")
     public SuccessNonDataResponse updateIsScreenLargeAllowed(
             @Parameter(hidden = true) @UserId Long userId,
             @Parameter(name = "roomId", description = "방 id") @PathVariable(value = "roomId") Long roomId
@@ -104,5 +106,42 @@ public class RoomUserController {
             @Parameter(name = "size", description = "페이지 ") @RequestParam(value = "size", defaultValue = "12") int size
     ) {
         return SuccessResponse.success(SuccessCode.GET_ROOMS_I_ENTERED_7DAYS_SUCCESS, roomUserService.get7DaysEnteredRooms(userId, page, size));
+    }
+
+    @Operation(summary = "방 들어가기 ", description = "방 들어가기  API입니다")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "방 들어가기 성공입니다.",
+                    content = @Content(schema = @Schema(implementation = SuccessNonDataResponse.class))),
+            @ApiResponse(responseCode = "409", description = "이미 사용 중인 방 이름입니다.",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류입니다.",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @SecurityRequirement(name = "JWT Auth")
+    @PostMapping("/{roomId}/enter")
+    public SuccessResponse<RoomEnterResponseDTO> enterRoom(
+            @Parameter(hidden = true) @UserId Long userId,
+            @PathVariable Long roomId,
+            @RequestBody RoomEnterRequestDTO request
+            ) {
+        return SuccessResponse.success(SuccessCode.ROOM_ENTER_SUCCESS, roomUserService.enterRoom(userId, roomId, request));
+    }
+    @Operation(summary = "방 나가기 ", description = "방 나가기  API입니다")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "방 나가기 성공입니다.",
+                    content = @Content(schema = @Schema(implementation = SuccessNonDataResponse.class))),
+            @ApiResponse(responseCode = "409", description = "이미 사용 중인 방 이름입니다.",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류입니다.",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @SecurityRequirement(name = "JWT Auth")
+    @PostMapping("/{roomId}/quit")
+    public SuccessNonDataResponse quitRoom(
+            @Parameter(hidden = true) @UserId Long userId,
+            @PathVariable Long roomId
+    ) {
+        roomUserService.quitRoom(userId, roomId);
+        return SuccessNonDataResponse.success(SuccessCode.ROOM_QUIT_SUCCESS);
     }
 }

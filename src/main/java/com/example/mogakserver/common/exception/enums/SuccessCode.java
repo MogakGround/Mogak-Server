@@ -30,6 +30,8 @@ public enum SuccessCode {
     GET_ROOMS_I_ENTERED_7DAYS_SUCCESS(HttpStatus.OK, "7일간 모각방 리스트 반환 성공입니다."),
     GET_MY_PROFILE(HttpStatus.OK, "프로필 조회 성공입니다."),
     UPDATE_MY_PROFILE(HttpStatus.OK, "프로필 수정 성공입니다."),
+    ROOM_ENTER_SUCCESS(HttpStatus.OK, "방 들어가기 성공입니다."),
+    ROOM_QUIT_SUCCESS(HttpStatus.OK, "방 나가기 성공입니다."),
     GET_RANKING_SUCCESS(HttpStatus.OK, "랭킹 조회 성공입니다.");
 
     private final HttpStatus httpStatus;

@@ -2,15 +2,17 @@ package com.example.mogakserver.roomuser.application.service;
 
 import com.example.mogakserver.common.exception.enums.ErrorCode;
 import com.example.mogakserver.common.exception.model.NotFoundException;
+import com.example.mogakserver.common.exception.model.UnAuthorizedException;
+import com.example.mogakserver.external.redis.RedisService;
+import com.example.mogakserver.external.socket.WebSocketBroadCaster;
+import com.example.mogakserver.external.socket.service.ScreenShareService;
+import com.example.mogakserver.external.socket.service.TimerService;
 import com.example.mogakserver.room.domain.entity.Room;
 import com.example.mogakserver.room.infra.repository.JpaRoomRepository;
 import com.example.mogakserver.roomimg.domain.entity.RoomImg;
 import com.example.mogakserver.roomimg.infra.repository.JpaRoomImgRepository;
-import com.example.mogakserver.roomuser.application.response.MyStatusResponseDTO;
-import com.example.mogakserver.roomuser.application.response.MyPageUserRoomDTO;
-import com.example.mogakserver.roomuser.application.response.MyPageUserRoomsListDTO;
-import com.example.mogakserver.roomuser.application.response.RoomUserDTO;
-import com.example.mogakserver.roomuser.application.response.RoomUserListDTO;
+import com.example.mogakserver.roomuser.api.request.RoomEnterRequestDTO;
+import com.example.mogakserver.roomuser.application.response.*;
 import com.example.mogakserver.roomuser.domain.entity.RoomUser;
 import com.example.mogakserver.roomuser.infra.repository.JpaRoomUserRepository;
 import com.example.mogakserver.user.domain.entity.User;
@@ -33,7 +35,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
+
+import static com.example.mogakserver.external.socket.WebRtcWebSocketHandler.sessionMap;
 
 @RequiredArgsConstructor
 @Service
@@ -45,6 +50,10 @@ public class RoomUserService {
     private final JpaUserRepository userRepository;
     private final JpaRoomImgRepository roomImgRepository;
     private final RedisTemplate<String, String> redisTemplate;
+    private final ScreenShareService screenShareService;
+    private final TimerService timerService;
+    private final RedisService redisService;
+    private final WebSocketBroadCaster webSocketBroadcaster;
 
     public void updateIsScreenShareLargeAllowed(Long userId, Long roomId){
         RoomUser roomUser = roomUserRepository.findByUserIdAndRoomId(userId, roomId).orElseThrow(()->new NotFoundException(ErrorCode.NOT_FOUND_ROOM_EXCEPTION));
@@ -234,6 +243,82 @@ public class RoomUserService {
         Page<RoomUser> recentRoomUserPage = roomUserRepository.findRecentRoomUsers(userId, sevenDaysAgo, pageable);
 
         return buildMyPageUserRoomsListDTO(page, recentRoomUserPage, pageable);
+    }
+
+    public RoomEnterResponseDTO enterRoom(Long userId, Long roomId, RoomEnterRequestDTO request) {
+        Room room = validateAndGetRoom(userId, roomId);
+
+        validatePassword(request, room);
+
+        Long roomUserId = getRoomUserId(userId, roomId, request);
+
+        // 화면 공유 상태 저장
+        if (request.isScreenShared()) {
+            screenShareService.addScreenShareUser(roomId, userId);
+        }
+
+        return RoomEnterResponseDTO.builder()
+                .roomUserId(roomUserId)
+                .build();
+    }
+
+    private Room validateAndGetRoom(Long userId, Long roomId) {
+        Room room = roomRepository.findById(roomId)
+                .orElseThrow(() -> new NotFoundException(ErrorCode.ROOM_NOT_FOUND_EXCEPTION));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND_EXCEPTION));
+        return room;
+    }
+
+    private static void validatePassword(RoomEnterRequestDTO request, Room room) {
+        // 비밀번호 검증
+        if (room.getRoomPassword() != null && !room.getRoomPassword().isEmpty()) {
+            if (request.password() == null || !room.getRoomPassword().equals(request.password())) {
+                throw new UnAuthorizedException(ErrorCode.ROOM_PERMISSION_DENIED);
+            }
+        }
+    }
+
+
+    private Long getRoomUserId(Long userId, Long roomId, RoomEnterRequestDTO request) {
+        Long roomUserId;
+        boolean exists = roomUserRepository.existsByRoomIdAndUserId(roomId, userId);
+        if (!exists) {
+            RoomUser roomUser = RoomUser.builder()
+                    .roomId(roomId)
+                    .userId(userId)
+                    .isHost(false)
+                    .isVideoLargeAllowed(request.isVideoLargeAllowed())
+                    .build();
+            roomUserRepository.save(roomUser);
+            roomUserId = roomUser.getId();
+        }else{
+            roomUserId = roomUserRepository.findByUserIdAndRoomId(userId, roomId).get().getRoomId();
+        }
+        return roomUserId;
+    }
+
+    @Transactional
+    public void quitRoom(Long userId, Long roomId) {
+        validateAndGetRoom(userId, roomId);
+
+        String timerKey = "timer-room-" + roomId;
+        String isRunning = (String) redisTemplate.opsForHash().get(timerKey, userId + "-isRunning");
+
+        if ("true".equals(isRunning)) {
+            timerService.stopTimer(roomId, userId);
+        }
+
+        // 화면 공유 중이면 자동으로 중지
+        Set<String> screenShareUsers = screenShareService.getScreenShareUsers(roomId);
+        if (screenShareUsers.contains(userId.toString())) {
+            screenShareService.removeScreenShareUser(roomId, userId);
+            redisService.publishEvent(roomId, "screen-share-stop", userId);
+        }
+
+        // 세션 정리 (사용자 정보는 유지)
+        webSocketBroadcaster.removeSession(roomId, sessionMap.get(userId));
+        sessionMap.remove(userId);
     }
 }
 

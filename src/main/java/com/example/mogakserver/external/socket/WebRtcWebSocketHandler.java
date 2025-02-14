@@ -26,7 +26,7 @@ public class WebRtcWebSocketHandler extends TextWebSocketHandler {
     private final ScreenShareService screenShareService;
     private final TimerService timerService;
 
-    private static final Map<Long, WebSocketSession> sessionMap = new ConcurrentHashMap<>();
+    public static final Map<Long, WebSocketSession> sessionMap = new ConcurrentHashMap<>();
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
@@ -45,8 +45,15 @@ public class WebRtcWebSocketHandler extends TextWebSocketHandler {
         redisService.subscribeToRoom(roomId);
 
         Set<String> screenShareUsers = screenShareService.getScreenShareUsers(roomId);
+        // 새로운 사용자에게 현재 공유 중인 화면 정보를 보내줌
         if (!screenShareUsers.isEmpty()) {
             session.sendMessage(new TextMessage(screenShareService.createScreenShareMessage(screenShareUsers)));
+        }
+
+        // 새로운 사용자가 화면 공유를 해야 한다면(방 들어오기에서 미리 설정) 이벤트 트리거
+        if (screenShareUsers.contains(userId.toString())) {
+            redisService.publishEvent(roomId, "screen-share-start", userId);
+            webSocketBroadcaster.broadcast(roomId, redisService.serializeMessage(createEventMessage("screen-share-start", userId)));
         }
 
         redisService.publishEvent(roomId, "participant-joined", userId);
