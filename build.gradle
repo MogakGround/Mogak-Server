@@ -59,6 +59,9 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter:5.7.1'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testImplementation 'com.h2database:h2'
+    testImplementation "org.testcontainers:testcontainers:1.20.4"
+    testImplementation "org.testcontainers:junit-jupiter:1.20.4"
+
 
     // SWAGGER
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
