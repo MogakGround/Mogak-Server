@@ -25,6 +25,7 @@ public class RoomImg {
 
     @Enumerated(value = EnumType.STRING)
     @NotNull
+    @Column(length = 512)
     private RoomImgType roomImgType;
 
     @CreatedDate
