@@ -57,6 +57,11 @@ public class User {
             this.portfolioUrl = portfolioUrl;
         }
     }
+    
+    public void resetTodayAddedTime() {
+        this.todayAddedTime = 0L;
+    }
+
 
     public void setVersion(int version){
         this.version = version;

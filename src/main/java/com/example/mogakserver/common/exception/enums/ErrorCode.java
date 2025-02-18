@@ -22,10 +22,12 @@ public enum ErrorCode {
     TOKEN_TIME_EXPIRED_EXCEPTION(HttpStatus.UNAUTHORIZED, "토큰이 만료되었습니다. 다시 로그인 해주세요."),
 
     //403
+    ROOM_PERMISSION_DENIED(HttpStatus.FORBIDDEN, "방 관련 권한이 없습니다."),
     ROOM_USER_NOT_MATCH(HttpStatus.FORBIDDEN, "유저와 방이 일치하지 않습니다"),
 
     //404
     USER_NOT_FOUND_EXCEPTION(HttpStatus.NOT_FOUND, "해당 유저는 존재하지 않습니다."),
+    ROOM_NOT_FOUND_EXCEPTION(HttpStatus.NOT_FOUND, "해당 방은 존재하지 않습니다."),
     NOT_FOUND_RESOURCE_EXCEPTION(HttpStatus.NOT_FOUND, "해당 자원을 찾을 수 없습니다."),
     NOT_FOUND_VERIFICATION_CODE_EXCEPTION(HttpStatus.NOT_FOUND, "인증 코드가 존재하지 않습니다."),
     NOT_FOUND_ROOM_EXCEPTION(HttpStatus.NOT_FOUND, "해당 모각방이 존재하지 않습니다."),
@@ -35,6 +37,8 @@ public enum ErrorCode {
 
     // 409 Conflict
     ALREADY_EXIST_OFFER_EXCEPTION(HttpStatus.CONFLICT, "이미 존재하는 제안서입니다"),
+    ALREADY_EXIST_NICKNAME_EXCEPTION(HttpStatus.CONFLICT, "이미 사용 중인 닉네임입니다."),
+    ALREADY_EXIST_ROOM_EXCEPTION(HttpStatus.CONFLICT, "이미 사용 중인 방 이름입니다."),
 
     // 500
     INTERNAL_SERVER_EXCEPTION(HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부 오류입니다.");

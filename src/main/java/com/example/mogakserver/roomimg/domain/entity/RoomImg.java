@@ -1,4 +1,4 @@
-package com.example.mogakserver.room.domain.entity;
+package com.example.mogakserver.roomimg.domain.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -15,30 +15,17 @@ import java.time.LocalDateTime;
 @EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-@Table(name = "rooms")
-public class Room {
+public class RoomImg {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @NotNull
-    private String roomName;
+    private Long roomId;
 
+    @Enumerated(value = EnumType.STRING)
     @NotNull
-    private boolean isLocked;
-
-    private String roomPassword;
-
-    private Integer userCnt;
-
-    private String roomExplain;
-
-    public void updateRoom(String roomName, Boolean isLocked, String roomPassword) {
-        this.roomName = roomName;
-        this.isLocked = isLocked;
-
-        this.roomPassword = Boolean.FALSE.equals(isLocked) ? null : roomPassword;
-    }
+    private RoomImgType roomImgType;
 
     @CreatedDate
     @Column(updatable = false)
