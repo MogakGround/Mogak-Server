@@ -1,7 +1,7 @@
 package com.example.mogakserver.auth.application.service;
 
-import com.example.mogakserver.auth.api.request.SignUpRequestDto;
-import com.example.mogakserver.auth.api.request.TokenRequestDto;
+import com.example.mogakserver.auth.api.request.SignUpRequestDTO;
+import com.example.mogakserver.auth.api.request.TokenRequestDTO;
 import com.example.mogakserver.auth.application.response.LoginResponseDto;
 import com.example.mogakserver.common.exception.dto.TokenPair;
 import com.example.mogakserver.common.config.jwt.JwtService;
@@ -27,39 +27,36 @@ public class AuthService {
     private final KakaoSocialService kakaoSocialService;
     private final JpaUserRepository jpaUserRepository;
 
-    public LoginResponseDto login(final String baseUrl, final String kakaoCode) {
-        Long kakaoId = kakaoSocialService.getIdFromKakao(baseUrl, kakaoCode);
+    public LoginResponseDto login(final String kakaoCode) {
+        Long kakaoId = kakaoSocialService.getIdFromKakao(kakaoCode);
         Optional<User> optionalUser = jpaUserRepository.findByKakaoId(kakaoId);
 
         User user;
-        boolean isNewUser = false;
 
         if (optionalUser.isEmpty()) {
             user = User.builder()
                     .kakaoId(kakaoId)
                     .nickName(null)
                     .portfolioUrl(null)
+                    .isNewUser(true)
                     .build();
             jpaUserRepository.save(user);
-            isNewUser = true;
         } else {
             user = optionalUser.get();
         }
 
         TokenPair tokenPair = jwtService.generateTokenPair(String.valueOf(user.getId()));
-
-        if (isNewUser) {
-            return LoginResponseDto.NewUserResponse(user.getId(), tokenPair.accessToken(), tokenPair.refreshToken());
-        } else {
-            return LoginResponseDto.ExistingUserResponse(user.getId(), tokenPair.accessToken(), tokenPair.refreshToken());
-        }
+        return user.getIsNewUser()
+                ? LoginResponseDto.NewUserResponse(user.getId(), tokenPair.accessToken(), tokenPair.refreshToken())
+                : LoginResponseDto.ExistingUserResponse(user.getId(), tokenPair.accessToken(), tokenPair.refreshToken());
     }
 
-    public LoginResponseDto signUp(SignUpRequestDto signUpRequest) {
-        User user = jpaUserRepository.findByKakaoId(signUpRequest.kakaoId())
+    public LoginResponseDto signUp(Long userId, SignUpRequestDTO signUpRequest) {
+        User user = jpaUserRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(USER_NOT_FOUND_EXCEPTION));
 
         user.updateProfile(signUpRequest.nickName(), signUpRequest.portfolioUrl());
+        user.completeSignUp();
         jpaUserRepository.save(user);
 
         TokenPair tokenPair = jwtService.generateTokenPair(String.valueOf(user.getId()));
@@ -72,7 +69,7 @@ public class AuthService {
         jwtService.deleteRefreshToken(String.valueOf(userId));
     }
 
-    public TokenPair refresh(final TokenRequestDto tokenRequestDto) {
+    public TokenPair refresh(final TokenRequestDTO tokenRequestDto) {
         if (!jwtService.verifyToken(tokenRequestDto.refreshToken()))
             throw new UnAuthorizedException(TOKEN_TIME_EXPIRED_EXCEPTION);
 

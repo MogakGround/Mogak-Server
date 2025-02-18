@@ -34,6 +34,8 @@ public class User {
 
     private Long todayAddedTime = 0L;
 
+    private Boolean isNewUser = true;
+
     @Version
     private Integer version = 0;
 
@@ -57,11 +59,14 @@ public class User {
             this.portfolioUrl = portfolioUrl;
         }
     }
-    
+
     public void resetTodayAddedTime() {
         this.todayAddedTime = 0L;
     }
 
+    public void completeSignUp() {
+        this.isNewUser = false;
+    }
 
     public void setVersion(int version){
         this.version = version;
