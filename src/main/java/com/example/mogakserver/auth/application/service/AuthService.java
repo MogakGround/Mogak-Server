@@ -8,12 +8,17 @@ import com.example.mogakserver.common.config.jwt.JwtService;
 import com.example.mogakserver.common.exception.model.NotFoundException;
 import com.example.mogakserver.common.exception.model.UnAuthorizedException;
 import com.example.mogakserver.external.kakao.service.KakaoSocialService;
+import com.example.mogakserver.room.application.service.RoomRegisterService;
+import com.example.mogakserver.roomuser.application.service.RoomUserService;
+import com.example.mogakserver.roomuser.infra.repository.JpaRoomUserRepository;
 import com.example.mogakserver.user.domain.entity.User;
 import com.example.mogakserver.user.infra.repository.JpaUserRepository;
+import com.example.mogakserver.worktime.infra.repository.JpaWorkTimeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 import static com.example.mogakserver.common.exception.enums.ErrorCode.TOKEN_TIME_EXPIRED_EXCEPTION;
@@ -26,6 +31,10 @@ public class AuthService {
     private final JwtService jwtService;
     private final KakaoSocialService kakaoSocialService;
     private final JpaUserRepository jpaUserRepository;
+    private final JpaRoomUserRepository roomUserRepository;
+    private final JpaWorkTimeRepository workTimeRepository;
+    private final RoomRegisterService roomRegisterService;
+    private final RoomUserService roomUserService;
 
     public LoginResponseDto login(final String kakaoCode) {
         Long kakaoId = kakaoSocialService.getIdFromKakao(kakaoCode);
@@ -87,6 +96,28 @@ public class AuthService {
     public void deleteUser(Long userId) {
         User user = jpaUserRepository.findById(userId).orElseThrow(() -> new NotFoundException(USER_NOT_FOUND_EXCEPTION));
         jwtService.deleteRefreshToken(String.valueOf(userId));
+
+        deleteHostedRooms(userId);
+        quitUserFromRooms(userId);
+
         jpaUserRepository.delete(user);
+    }
+
+    private void deleteHostedRooms(Long userId) {
+        List<Long> hostRoomIds = roomUserRepository.findHostRoomIdsByUserId(userId);
+
+        for (Long roomId : hostRoomIds) {
+            roomRegisterService.deleteRoom(userId, roomId);
+        }
+    }
+
+    private void quitUserFromRooms(Long userId) {
+        List<Long> joinedRoomIds = roomUserRepository.findJoinedRoomIdsByUserId(userId);
+
+        for (Long roomId : joinedRoomIds) {
+            roomUserService.quitRoom(userId, roomId);
+        }
+
+        roomUserRepository.deleteByUserId(userId);
     }
 }

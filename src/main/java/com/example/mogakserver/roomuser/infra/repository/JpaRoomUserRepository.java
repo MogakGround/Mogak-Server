@@ -18,6 +18,7 @@ public interface JpaRoomUserRepository extends JpaRepository<RoomUser, Long> {
     List<RoomUser> findByRoomId(Long roomId);
 
     void deleteByRoomId(Long roomId);
+    void deleteByUserId(Long userId);
 
     @Query("SELECT ru FROM RoomUser ru WHERE ru.userId = :userId " +
             "AND (ru.createdAt > :sevenDaysAgo OR ru.modifiedAt > :sevenDaysAgo)")
@@ -31,6 +32,12 @@ public interface JpaRoomUserRepository extends JpaRepository<RoomUser, Long> {
             @Param("userId") Long userId,
             Pageable pageable
     );
+
+    @Query("SELECT ru.roomId FROM RoomUser ru WHERE ru.userId = :userId AND ru.isHost = true")
+    List<Long> findHostRoomIdsByUserId(@Param("userId") Long userId);
+
+    @Query("SELECT ru.roomId FROM RoomUser ru WHERE ru.userId = :userId")
+    List<Long> findJoinedRoomIdsByUserId(@Param("userId") Long userId);
 
     boolean existsByRoomIdAndUserId(Long roomId, Long userId);
 }
