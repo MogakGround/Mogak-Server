@@ -29,28 +29,41 @@ public class AuthService {
 
     public LoginResponseDto login(final String baseUrl, final String kakaoCode) {
         Long kakaoId = kakaoSocialService.getIdFromKakao(baseUrl, kakaoCode);
-        Optional<User> user = jpaUserRepository.findByKakaoId(kakaoId);
+        Optional<User> optionalUser = jpaUserRepository.findByKakaoId(kakaoId);
 
-        if (user.isEmpty()) {
-            TokenPair tokenPair = jwtService.generateTokenPair(String.valueOf(kakaoId));
-            return LoginResponseDto.NewUserResponse(kakaoId, tokenPair.accessToken(), tokenPair.refreshToken());
+        User user;
+        boolean isNewUser = false;
+
+        if (optionalUser.isEmpty()) {
+            user = User.builder()
+                    .kakaoId(kakaoId)
+                    .nickName(null)
+                    .portfolioUrl(null)
+                    .build();
+            jpaUserRepository.save(user);
+            isNewUser = true;
+        } else {
+            user = optionalUser.get();
         }
 
-        User existingUser = user.get();
-        TokenPair tokenPair = jwtService.generateTokenPair(String.valueOf(user.get().getId()));
-        return LoginResponseDto.ExistingUserResponse(existingUser.getId(), tokenPair.accessToken(), tokenPair.refreshToken());
+        TokenPair tokenPair = jwtService.generateTokenPair(String.valueOf(user.getId()));
+
+        if (isNewUser) {
+            return LoginResponseDto.NewUserResponse(user.getId(), tokenPair.accessToken(), tokenPair.refreshToken());
+        } else {
+            return LoginResponseDto.ExistingUserResponse(user.getId(), tokenPair.accessToken(), tokenPair.refreshToken());
+        }
     }
 
     public LoginResponseDto signUp(SignUpRequestDto signUpRequest) {
-        User newUser = User.builder()
-                .kakaoId(signUpRequest.kakaoId())
-                .nickName(signUpRequest.nickName())
-                .portfolioUrl(signUpRequest.portfolioUrl())
-                .build();
-        jpaUserRepository.save(newUser);
+        User user = jpaUserRepository.findByKakaoId(signUpRequest.kakaoId())
+                .orElseThrow(() -> new NotFoundException(USER_NOT_FOUND_EXCEPTION));
 
-        TokenPair tokenPair = jwtService.generateTokenPair(String.valueOf(newUser.getId()));
-        return LoginResponseDto.SignupResponse(newUser.getId(), tokenPair.accessToken(), tokenPair.refreshToken());
+        user.updateProfile(signUpRequest.nickName(), signUpRequest.portfolioUrl());
+        jpaUserRepository.save(user);
+
+        TokenPair tokenPair = jwtService.generateTokenPair(String.valueOf(user.getId()));
+        return LoginResponseDto.SignupResponse(user.getId(), tokenPair.accessToken(), tokenPair.refreshToken());
     }
 
     public void logout(final Long userId) {

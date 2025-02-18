@@ -49,6 +49,15 @@ public class User {
         }
         this.todayAddedTime = todayAddedTime+updateAddedTime;
     }
+
+    public void updateProfile(String nickName, String portfolioUrl) {
+        this.nickName = nickName;
+
+        if (portfolioUrl != null) {
+            this.portfolioUrl = portfolioUrl;
+        }
+    }
+
     public void setVersion(int version){
         this.version = version;
     }
