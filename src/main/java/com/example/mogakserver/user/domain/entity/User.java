@@ -34,6 +34,8 @@ public class User {
 
     private Long todayAddedTime = 0L;
 
+    private Boolean isNewUser = true;
+
     @Version
     private Integer version = 0;
 
@@ -50,14 +52,22 @@ public class User {
         this.todayAddedTime = todayAddedTime+updateAddedTime;
     }
 
+    public void updateProfile(String nickName, String portfolioUrl) {
+        this.nickName = nickName;
+
+        if (portfolioUrl != null) {
+            this.portfolioUrl = portfolioUrl;
+        }
+    }
+
     public void resetTodayAddedTime() {
         this.todayAddedTime = 0L;
     }
 
-    public void updateProfile(String nickName, String portfolioUrl){
-        this.nickName = nickName;
-        this.portfolioUrl = portfolioUrl;
+    public void completeSignUp() {
+        this.isNewUser = false;
     }
+
     public void setVersion(int version){
         this.version = version;
     }

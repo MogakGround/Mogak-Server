@@ -11,21 +11,24 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class KakaoSocialService extends SocialService {
-    @Value("${kakao.client-id}")
-    private String clientId;
     private static final String Bearer = "Bearer ";
     private static final String GRANT_TYPE = "authorization_code";
-    private static final String KAKAO_ROUTER = "/login/oauth2/code/kakao";
+
+    @Value("${kakao.client-id}")
+    private String clientId;
+
+    @Value("${kakao.redirect-uri}")
+    private String redirectUri;
+
     private final KakaoAuthApiClient kakaoAuthApiClient;
     private final KakaoApiClient kakaoApiClient;
 
     @Override
-    public Long getIdFromKakao(String baseUrl, String kakaoCode) {
-        String redirectUrl = baseUrl + KAKAO_ROUTER;
+    public Long getIdFromKakao(String kakaoCode) {
         KakaoAccessTokenResponse tokenResponse = kakaoAuthApiClient.getOAuth2AccessToken(
                 GRANT_TYPE,
                 clientId,
-                redirectUrl,
+                redirectUri,
                 kakaoCode
         );
 

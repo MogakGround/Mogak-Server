@@ -1,19 +1,24 @@
 package com.example.mogakserver.auth.application.service;
 
-import com.example.mogakserver.auth.api.request.SignUpRequestDto;
-import com.example.mogakserver.auth.api.request.TokenRequestDto;
+import com.example.mogakserver.auth.api.request.SignUpRequestDTO;
+import com.example.mogakserver.auth.api.request.TokenRequestDTO;
 import com.example.mogakserver.auth.application.response.LoginResponseDto;
 import com.example.mogakserver.common.exception.dto.TokenPair;
 import com.example.mogakserver.common.config.jwt.JwtService;
 import com.example.mogakserver.common.exception.model.NotFoundException;
 import com.example.mogakserver.common.exception.model.UnAuthorizedException;
 import com.example.mogakserver.external.kakao.service.KakaoSocialService;
+import com.example.mogakserver.room.application.service.RoomRegisterService;
+import com.example.mogakserver.roomuser.application.service.RoomUserService;
+import com.example.mogakserver.roomuser.infra.repository.JpaRoomUserRepository;
 import com.example.mogakserver.user.domain.entity.User;
 import com.example.mogakserver.user.infra.repository.JpaUserRepository;
+import com.example.mogakserver.worktime.infra.repository.JpaWorkTimeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 import static com.example.mogakserver.common.exception.enums.ErrorCode.TOKEN_TIME_EXPIRED_EXCEPTION;
@@ -26,31 +31,45 @@ public class AuthService {
     private final JwtService jwtService;
     private final KakaoSocialService kakaoSocialService;
     private final JpaUserRepository jpaUserRepository;
+    private final JpaRoomUserRepository roomUserRepository;
+    private final JpaWorkTimeRepository workTimeRepository;
+    private final RoomRegisterService roomRegisterService;
+    private final RoomUserService roomUserService;
 
-    public LoginResponseDto login(final String baseUrl, final String kakaoCode) {
-        Long kakaoId = kakaoSocialService.getIdFromKakao(baseUrl, kakaoCode);
-        Optional<User> user = jpaUserRepository.findByKakaoId(kakaoId);
+    public LoginResponseDto login(final String kakaoCode) {
+        Long kakaoId = kakaoSocialService.getIdFromKakao(kakaoCode);
+        Optional<User> optionalUser = jpaUserRepository.findByKakaoId(kakaoId);
 
-        if (user.isEmpty()) {
-            TokenPair tokenPair = jwtService.generateTokenPair(String.valueOf(kakaoId));
-            return LoginResponseDto.NewUserResponse(kakaoId, tokenPair.accessToken(), tokenPair.refreshToken());
+        User user;
+
+        if (optionalUser.isEmpty()) {
+            user = User.builder()
+                    .kakaoId(kakaoId)
+                    .nickName(null)
+                    .portfolioUrl(null)
+                    .isNewUser(true)
+                    .build();
+            jpaUserRepository.save(user);
+        } else {
+            user = optionalUser.get();
         }
 
-        User existingUser = user.get();
-        TokenPair tokenPair = jwtService.generateTokenPair(String.valueOf(user.get().getId()));
-        return LoginResponseDto.ExistingUserResponse(existingUser.getId(), tokenPair.accessToken(), tokenPair.refreshToken());
+        TokenPair tokenPair = jwtService.generateTokenPair(String.valueOf(user.getId()));
+        return user.getIsNewUser()
+                ? LoginResponseDto.NewUserResponse(user.getId(), tokenPair.accessToken(), tokenPair.refreshToken())
+                : LoginResponseDto.ExistingUserResponse(user.getId(), tokenPair.accessToken(), tokenPair.refreshToken());
     }
 
-    public LoginResponseDto signUp(SignUpRequestDto signUpRequest) {
-        User newUser = User.builder()
-                .kakaoId(signUpRequest.kakaoId())
-                .nickName(signUpRequest.nickName())
-                .portfolioUrl(signUpRequest.portfolioUrl())
-                .build();
-        jpaUserRepository.save(newUser);
+    public LoginResponseDto signUp(Long userId, SignUpRequestDTO signUpRequest) {
+        User user = jpaUserRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException(USER_NOT_FOUND_EXCEPTION));
 
-        TokenPair tokenPair = jwtService.generateTokenPair(String.valueOf(newUser.getId()));
-        return LoginResponseDto.SignupResponse(newUser.getId(), tokenPair.accessToken(), tokenPair.refreshToken());
+        user.updateProfile(signUpRequest.nickName(), signUpRequest.portfolioUrl());
+        user.completeSignUp();
+        jpaUserRepository.save(user);
+
+        TokenPair tokenPair = jwtService.generateTokenPair(String.valueOf(user.getId()));
+        return LoginResponseDto.SignupResponse(user.getId(), tokenPair.accessToken(), tokenPair.refreshToken());
     }
 
     public void logout(final Long userId) {
@@ -59,7 +78,7 @@ public class AuthService {
         jwtService.deleteRefreshToken(String.valueOf(userId));
     }
 
-    public TokenPair refresh(final TokenRequestDto tokenRequestDto) {
+    public TokenPair refresh(final TokenRequestDTO tokenRequestDto) {
         if (!jwtService.verifyToken(tokenRequestDto.refreshToken()))
             throw new UnAuthorizedException(TOKEN_TIME_EXPIRED_EXCEPTION);
 
@@ -77,6 +96,28 @@ public class AuthService {
     public void deleteUser(Long userId) {
         User user = jpaUserRepository.findById(userId).orElseThrow(() -> new NotFoundException(USER_NOT_FOUND_EXCEPTION));
         jwtService.deleteRefreshToken(String.valueOf(userId));
+
+        deleteHostedRooms(userId);
+        quitUserFromRooms(userId);
+
         jpaUserRepository.delete(user);
+    }
+
+    private void deleteHostedRooms(Long userId) {
+        List<Long> hostRoomIds = roomUserRepository.findHostRoomIdsByUserId(userId);
+
+        for (Long roomId : hostRoomIds) {
+            roomRegisterService.deleteRoom(userId, roomId);
+        }
+    }
+
+    private void quitUserFromRooms(Long userId) {
+        List<Long> joinedRoomIds = roomUserRepository.findJoinedRoomIdsByUserId(userId);
+
+        for (Long roomId : joinedRoomIds) {
+            roomUserService.quitRoom(userId, roomId);
+        }
+
+        roomUserRepository.deleteByUserId(userId);
     }
 }
