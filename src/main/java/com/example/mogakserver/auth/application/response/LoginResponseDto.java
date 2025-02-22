@@ -9,24 +9,21 @@ public record LoginResponseDto(
         Long userId,
 
         String accessToken,
-        String refreshToken,
-
-        @JsonProperty("isNewUser")
-        boolean isNewUser
+        String refreshToken
 ) {
 
     // 신규 사용자 로그인
     public static LoginResponseDto NewUserResponse(Long userId, String accessToken, String refreshToken) {
-        return new LoginResponseDto(userId, accessToken, refreshToken, true);
+        return new LoginResponseDto(userId, accessToken, refreshToken);
     }
 
     // 기존 사용자 로그인
     public static LoginResponseDto ExistingUserResponse(Long userId, String accessToken, String refreshToken) {
-        return new LoginResponseDto(userId, accessToken, refreshToken, false);
+        return new LoginResponseDto(userId, accessToken, refreshToken);
     }
 
     // 회원가입
     public static LoginResponseDto SignupResponse(Long userId, String accessToken, String refreshToken) {
-        return new LoginResponseDto(userId, accessToken, refreshToken, false);
+        return new LoginResponseDto(userId, accessToken, refreshToken);
     }
 }
