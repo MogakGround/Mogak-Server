@@ -32,9 +32,9 @@ public class User {
 
     private String email;
 
-    private Long todayAddedTime = 0L;
-
     private Boolean isNewUser = true;
+
+    private Long todayAddedTime = 0L;
 
     @Version
     private Integer version = 0;
@@ -62,10 +62,6 @@ public class User {
 
     public void resetTodayAddedTime() {
         this.todayAddedTime = 0L;
-    }
-
-    public void completeSignUp() {
-        this.isNewUser = false;
     }
 
     public void setVersion(int version){

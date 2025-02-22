@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 @AllArgsConstructor
 public enum SuccessCode {
 
+    KAKAO_CODE_SUCCESS(HttpStatus.OK, "인가 코드 발급 성공"),
     SIGNUP_SUCCESS(HttpStatus.OK, "신규 회원 입니다."),
     SOCIAL_LOGIN_SUCCESS(HttpStatus.OK, "카카오 로그인 성공입니다."),
     LOGOUT_SUCCESS(HttpStatus.OK, "로그아웃 성공입니다."),

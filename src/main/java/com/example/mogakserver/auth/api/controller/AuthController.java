@@ -41,7 +41,7 @@ public class AuthController {
     }
 
 
-    @Operation(summary = "[JWT] 회원가입 API", description = "카카오 로그인 사용자 회원가입")
+    @Operation(summary = "회원가입 API", description = "카카오 로그인 사용자 회원가입")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "회원가입 성공",
                     content = @Content(schema = @Schema(implementation = LoginResponseDto.class))),
@@ -51,11 +51,9 @@ public class AuthController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping("/signup")
-    @SecurityRequirement(name = "JWT Auth")
     public SuccessResponse<LoginResponseDto> signUp(
-            @RequestBody SignUpRequestDTO signUpRequest,
-            @Parameter(hidden = true) @UserId Long userId) {
-        return SuccessResponse.success(SOCIAL_LOGIN_SUCCESS, authService.signUp(userId, signUpRequest));
+            @RequestBody SignUpRequestDTO signUpRequest) {
+        return SuccessResponse.success(SOCIAL_LOGIN_SUCCESS, authService.signUp(signUpRequest));
     }
 
 
