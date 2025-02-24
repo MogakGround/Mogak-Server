@@ -36,6 +36,10 @@ public class AuthService {
     private final RoomUserService roomUserService;
 
     public LoginResponseDto login(final String kakaoCode) {
+        if (kakaoCode == null || kakaoCode.isEmpty()) {
+            throw new UnAuthorizedException(EMPTY_KAKAO_CODE_EXCEPTION);
+        }
+
         Long kakaoId;
         try {
             kakaoId = kakaoSocialService.getIdFromKakao(kakaoCode).getData();
@@ -43,16 +47,12 @@ public class AuthService {
             throw new NotFoundException(INVALID_KAKAO_CODE_EXCEPTION);
         }
 
-        Optional<User> optionalUser = jpaUserRepository.findByKakaoId(kakaoId);
-        if (optionalUser.isEmpty()) {
-            throw new NotFoundException(USER_NOT_FOUND_EXCEPTION);
-        }
+        User user = jpaUserRepository.findByKakaoId(kakaoId)
+                .orElseThrow(() -> new NotFoundException(USER_NOT_FOUND_EXCEPTION));
 
-        User user = optionalUser.get();
         TokenPair tokenPair = jwtService.generateTokenPair(String.valueOf(user.getId()));
-        return user.getIsNewUser()
-                ? LoginResponseDto.NewUserResponse(user.getId(), tokenPair.accessToken(), tokenPair.refreshToken())
-                : LoginResponseDto.ExistingUserResponse(user.getId(), tokenPair.accessToken(), tokenPair.refreshToken());
+
+        return LoginResponseDto.ExistingUserResponse(user.getId(), tokenPair.accessToken(), tokenPair.refreshToken());
     }
 
     public LoginResponseDto signUp(SignUpRequestDTO signUpRequest) {
