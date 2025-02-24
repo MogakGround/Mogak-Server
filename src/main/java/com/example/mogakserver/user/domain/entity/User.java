@@ -32,8 +32,6 @@ public class User {
 
     private String email;
 
-    private Boolean isNewUser = true;
-
     private Long todayAddedTime = 0L;
 
     @Version
