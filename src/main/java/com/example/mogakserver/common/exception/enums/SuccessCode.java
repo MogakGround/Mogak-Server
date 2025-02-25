@@ -9,8 +9,9 @@ import org.springframework.http.HttpStatus;
 public enum SuccessCode {
 
     KAKAO_CODE_SUCCESS(HttpStatus.OK, "인가 코드 발급 성공"),
-    SIGNUP_SUCCESS(HttpStatus.OK, "신규 회원 입니다."),
     SOCIAL_LOGIN_SUCCESS(HttpStatus.OK, "카카오 로그인 성공입니다."),
+    SIGNUP_REQUIRED(HttpStatus.OK, "회원가입이 필요한 사용자입니다."),
+    SIGNUP_SUCCESS(HttpStatus.OK, "회원가입이 완료되었습니다."),
     LOGOUT_SUCCESS(HttpStatus.OK, "로그아웃 성공입니다."),
     REFRESH_SUCCESS(HttpStatus.OK, "토큰 갱신 성공입니다."),
     GET_AVAILABLE_NICKNAME(HttpStatus.OK, "사용 가능한 닉네임입니다."),

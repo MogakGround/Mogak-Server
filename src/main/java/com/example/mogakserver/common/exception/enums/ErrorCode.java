@@ -9,7 +9,6 @@ import org.springframework.http.HttpStatus;
 public enum ErrorCode {
     // 400
     INVALID_TOKEN_EXCEPTION(HttpStatus.BAD_REQUEST, "유효하지 않은 토큰을 입력했습니다."),
-    EMPTY_KAKAO_CODE_EXCEPTION(HttpStatus.BAD_REQUEST, "카카오 코드 값을 입력해 주세요."),
     INVALID_KAKAO_CODE_EXCEPTION(HttpStatus.BAD_REQUEST, "유효하지 않은 카카오 코드를 입력했습니다."),
     EXPIRE_VERIFICATION_CODE_EXCEPTION(HttpStatus.BAD_REQUEST, "만료된 인증 코드입니다."),
     INVALID_VALUE_TYPE_EXCEPTION(HttpStatus.BAD_REQUEST, "유효하지 않은 타입 값을 입력했습니다."),
@@ -18,8 +17,10 @@ public enum ErrorCode {
     INVALID_EMPTY_TYPE_EXCEPTION(HttpStatus.BAD_REQUEST, "해당 값은 null 또 상수 값이 유효하지 않습니다."),
 
     // 401
+    EMPTY_KAKAO_CODE_EXCEPTION(HttpStatus.UNAUTHORIZED, "카카오 인증을 위해 유효한 코드를 제공해 주세요."),
+    EMPTY_KAKAO_ID_EXCEPTION(HttpStatus.UNAUTHORIZED, "카카오 ID 값을 입력해 주세요."),
     TOKEN_NOT_CONTAINED_EXCEPTION(HttpStatus.UNAUTHORIZED, "Access Token이 필요합니다."),
-    TOKEN_TIME_EXPIRED_EXCEPTION(HttpStatus.UNAUTHORIZED, "토큰이 만료되었습니다. 다시 로그인 해주세요."),
+    TOKEN_TIME_EXPIRED_EXCEPTION(HttpStatus.UNAUTHORIZED, "토큰이 만료되었습니다."),
 
     //403
     ROOM_PERMISSION_DENIED(HttpStatus.FORBIDDEN, "방 관련 권한이 없습니다."),
@@ -37,8 +38,8 @@ public enum ErrorCode {
     METHOD_NOT_ALLOWED_EXCEPTION(HttpStatus.METHOD_NOT_ALLOWED, "지원하지 않는 메소드 입니다."),
 
     // 409 Conflict
-    ALREADY_EXIST_USER_EXCEPTION(HttpStatus.CONFLICT, "이미 존재하는 유저입니다"),
-    ALREADY_EXIST_OFFER_EXCEPTION(HttpStatus.CONFLICT, "이미 존재하는 제안서입니다"),
+    ALREADY_EXIST_USER_EXCEPTION(HttpStatus.CONFLICT, "이미 존재하는 유저입니다."),
+    ALREADY_EXIST_OFFER_EXCEPTION(HttpStatus.CONFLICT, "이미 존재하는 제안서입니다."),
     ALREADY_EXIST_NICKNAME_EXCEPTION(HttpStatus.CONFLICT, "이미 사용 중인 닉네임입니다."),
     ALREADY_EXIST_ROOM_EXCEPTION(HttpStatus.CONFLICT, "이미 사용 중인 방 이름입니다."),
 

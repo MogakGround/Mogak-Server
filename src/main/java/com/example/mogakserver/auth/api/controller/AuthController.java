@@ -37,7 +37,13 @@ public class AuthController {
     })
     @PostMapping("/login")
     public SuccessResponse<LoginResponseDto> login(@RequestBody LoginRequestDTO loginRequest) {
-        return SuccessResponse.success(SOCIAL_LOGIN_SUCCESS, authService.login(loginRequest.kakaoCode()));
+        LoginResponseDto loginResponse = authService.login(loginRequest.kakaoCode());
+
+        if ("fail".equals(loginResponse.status())) {
+            return SuccessResponse.success(SIGNUP_REQUIRED, loginResponse);
+        }
+
+        return SuccessResponse.success(SOCIAL_LOGIN_SUCCESS, loginResponse);
     }
 
 
