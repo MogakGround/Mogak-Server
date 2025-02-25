@@ -13,13 +13,11 @@ import com.example.mogakserver.roomuser.application.service.RoomUserService;
 import com.example.mogakserver.roomuser.infra.repository.JpaRoomUserRepository;
 import com.example.mogakserver.user.domain.entity.User;
 import com.example.mogakserver.user.infra.repository.JpaUserRepository;
-import com.example.mogakserver.worktime.infra.repository.JpaWorkTimeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 import static com.example.mogakserver.common.exception.enums.ErrorCode.*;
 
@@ -31,7 +29,6 @@ public class AuthService {
     private final KakaoSocialService kakaoSocialService;
     private final JpaUserRepository jpaUserRepository;
     private final JpaRoomUserRepository roomUserRepository;
-    private final JpaWorkTimeRepository workTimeRepository;
     private final RoomRegisterService roomRegisterService;
     private final RoomUserService roomUserService;
 
@@ -47,39 +44,40 @@ public class AuthService {
             throw new NotFoundException(INVALID_KAKAO_CODE_EXCEPTION);
         }
 
-        User user = jpaUserRepository.findByKakaoId(kakaoId)
-                .orElseThrow(() -> new NotFoundException(USER_NOT_FOUND_EXCEPTION));
+        User user = jpaUserRepository.findByKakaoId(kakaoId).orElse(null);
+
+        if (user == null) {
+            jpaUserRepository.save(User.builder().kakaoId(kakaoId).build());
+            return LoginResponseDto.NewUserResponse(kakaoId);
+        }
 
         TokenPair tokenPair = jwtService.generateTokenPair(String.valueOf(user.getId()));
-
-        return LoginResponseDto.ExistingUserResponse(user.getId(), tokenPair.accessToken(), tokenPair.refreshToken());
+        return LoginResponseDto.ExistingUserResponse(tokenPair.accessToken(), tokenPair.refreshToken());
     }
 
     public LoginResponseDto signUp(SignUpRequestDTO signUpRequest) {
-        if (signUpRequest.kakaoCode() == null || signUpRequest.kakaoCode().isEmpty()) {
-            throw new UnAuthorizedException(EMPTY_KAKAO_CODE_EXCEPTION);
+        if (signUpRequest.kakaoId() == null) {
+            throw new UnAuthorizedException(EMPTY_KAKAO_ID_EXCEPTION);
         }
 
-        Long kakaoId;
-        try {
-            kakaoId = kakaoSocialService.getIdFromKakao(signUpRequest.kakaoCode()).getData();
-        } catch (Exception e) {
-            throw new NotFoundException(INVALID_KAKAO_CODE_EXCEPTION);
-        }
+        jpaUserRepository.findByKakaoId(signUpRequest.kakaoId()).ifPresent(user -> {
+            if (user.getNickName() != null) {
+                throw new UnAuthorizedException(ALREADY_EXIST_USER_EXCEPTION);
+            }
+        });
 
-        if (jpaUserRepository.findByKakaoId(kakaoId).isPresent()) {
+        User user = jpaUserRepository.findByKakaoId(signUpRequest.kakaoId())
+                .orElseThrow(() -> new NotFoundException(USER_NOT_FOUND_EXCEPTION));
+
+        if (user.getNickName() != null) {
             throw new UnAuthorizedException(ALREADY_EXIST_USER_EXCEPTION);
         }
 
-        User newUser = User.builder()
-                .kakaoId(kakaoId)
-                .nickName(signUpRequest.nickName())
-                .portfolioUrl(signUpRequest.portfolioUrl())
-                .build();
-        jpaUserRepository.save(newUser);
+        user.updateProfile(signUpRequest.nickName(), signUpRequest.portfolioUrl());
+        jpaUserRepository.save(user);
 
-        TokenPair tokenPair = jwtService.generateTokenPair(String.valueOf(newUser.getId()));
-        return LoginResponseDto.SignupResponse(newUser.getId(), tokenPair.accessToken(), tokenPair.refreshToken());
+        TokenPair tokenPair = jwtService.generateTokenPair(String.valueOf(user.getId()));
+        return LoginResponseDto.SignupResponse(tokenPair.accessToken(), tokenPair.refreshToken());
     }
 
     public void logout(final Long userId) {
