@@ -47,7 +47,7 @@ public class RoomRetrieveController {
     }
     @Operation(summary = "[JWT] 타이머 리스트 조회", description = "해당 방에서 타이머를 실행 중 인 타이머 리스트 조회 api 입니다")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "타이머 리스트 조회 성공", content = @Content(schema = @Schema(implementation = ScreenShareUsersListDTO.class))),
+            @ApiResponse(responseCode = "200", description = "타이머 리스트 조회 성공", content = @Content(schema = @Schema(implementation = TimerListDTO.class))),
             @ApiResponse(responseCode = "404", description = "유저가 존재하지 않습니다", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "500", description = "서버 내부 오류 입니다.", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
     })
@@ -84,7 +84,7 @@ public class RoomRetrieveController {
     @Operation(summary = "[JWT] 모각방 단일 조회", description = "특정 모각방을 조회하는 API입니다")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "모각방 단일 조회 성공",
-                    content = @Content(schema = @Schema(implementation = SuccessResponse.class))),
+                    content = @Content(schema = @Schema(implementation = RoomDTO.class))),
             @ApiResponse(responseCode = "404", description = "존재하지 않는 모각방입니다",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "500", description = "서버 내부 오류입니다.",
