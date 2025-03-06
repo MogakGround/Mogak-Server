@@ -1,7 +1,6 @@
 package com.example.mogakserver.auth.application.service;
 
 import com.example.mogakserver.auth.api.request.SignUpRequestDTO;
-import com.example.mogakserver.auth.api.request.TokenRequestDTO;
 import com.example.mogakserver.auth.application.response.LoginResponseDto;
 import com.example.mogakserver.common.exception.dto.TokenPair;
 import com.example.mogakserver.common.config.jwt.JwtService;
@@ -13,7 +12,9 @@ import com.example.mogakserver.roomuser.application.service.RoomUserService;
 import com.example.mogakserver.roomuser.infra.repository.JpaRoomUserRepository;
 import com.example.mogakserver.user.domain.entity.User;
 import com.example.mogakserver.user.infra.repository.JpaUserRepository;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,7 +33,7 @@ public class AuthService {
     private final RoomRegisterService roomRegisterService;
     private final RoomUserService roomUserService;
 
-    public LoginResponseDto login(final String kakaoCode) {
+    public LoginResponseDto login(final String kakaoCode, HttpServletResponse response) {
         if (kakaoCode == null || kakaoCode.isEmpty()) {
             throw new UnAuthorizedException(EMPTY_KAKAO_CODE_EXCEPTION);
         }
@@ -52,7 +53,25 @@ public class AuthService {
         }
 
         TokenPair tokenPair = jwtService.generateTokenPair(String.valueOf(user.getId()));
-        return LoginResponseDto.ExistingUserResponse(tokenPair.accessToken(), tokenPair.refreshToken());
+        String userId = String.valueOf(user.getId());
+        String storedRefreshToken = jwtService.getStoredRefreshToken(userId);
+
+        if (storedRefreshToken == null || !jwtService.hasValidRefreshToken(userId) ||
+                jwtService.isRefreshTokenExpiringSoon(storedRefreshToken)) {
+            jwtService.saveRefreshToken(userId, tokenPair.refreshToken());
+
+            ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", tokenPair.refreshToken())
+                    .httpOnly(true)
+                    .secure(true)
+                    .path("/")
+                    .maxAge(14 * 24 * 60 * 60)
+                    .sameSite("Strict")
+                    .build();
+
+            response.addHeader("Set-Cookie", refreshTokenCookie.toString());
+        }
+
+        return LoginResponseDto.ExistingUserResponse(tokenPair.accessToken());
     }
 
     public LoginResponseDto signUp(SignUpRequestDTO signUpRequest) {
@@ -77,7 +96,7 @@ public class AuthService {
         jpaUserRepository.save(user);
 
         TokenPair tokenPair = jwtService.generateTokenPair(String.valueOf(user.getId()));
-        return LoginResponseDto.SignupResponse(tokenPair.accessToken(), tokenPair.refreshToken());
+        return LoginResponseDto.SignupResponse(tokenPair.accessToken());
     }
 
     public void logout(final Long userId) {
@@ -86,19 +105,20 @@ public class AuthService {
         jwtService.deleteRefreshToken(String.valueOf(userId));
     }
 
-    public TokenPair refresh(final TokenRequestDTO tokenRequestDto) {
-        if (!jwtService.verifyToken(tokenRequestDto.refreshToken()))
-            throw new UnAuthorizedException(TOKEN_TIME_EXPIRED_EXCEPTION);
+    public TokenPair refresh(final String refreshToken) {
+        if (!jwtService.verifyToken(refreshToken)) {
+            throw new UnAuthorizedException(REFRESH_TOKEN_TIME_EXPIRED_EXCEPTION);
+        }
 
-        final String userId = jwtService.getUserIdInToken(tokenRequestDto.refreshToken());
-        final User user = jpaUserRepository.findById(Long.parseLong(userId)).orElseThrow(() -> new NotFoundException(USER_NOT_FOUND_EXCEPTION));
+        String userId = jwtService.getUserIdInToken(refreshToken);
 
-        if (!jwtService.compareRefreshToken(userId, tokenRequestDto.refreshToken()))
-            throw new UnAuthorizedException(TOKEN_TIME_EXPIRED_EXCEPTION);
+        if (jwtService.isRefreshTokenExpiringSoon(refreshToken)) {
+            TokenPair newTokenPair = jwtService.generateTokenPair(userId);
+            jwtService.saveRefreshToken(userId, newTokenPair.refreshToken());
+            return newTokenPair;
+        }
 
-        final TokenPair tokenPair = jwtService.generateTokenPair(userId);
-        jwtService.saveRefreshToken(userId, tokenPair.refreshToken());
-        return tokenPair;
+        return TokenPair.accessTokenResponse(jwtService.createAccessToken(userId));
     }
 
     public void deleteUser(Long userId) {

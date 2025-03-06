@@ -21,6 +21,7 @@ public enum ErrorCode {
     EMPTY_KAKAO_ID_EXCEPTION(HttpStatus.UNAUTHORIZED, "카카오 ID 값을 입력해 주세요."),
     TOKEN_NOT_CONTAINED_EXCEPTION(HttpStatus.UNAUTHORIZED, "Access Token이 필요합니다."),
     TOKEN_TIME_EXPIRED_EXCEPTION(HttpStatus.UNAUTHORIZED, "토큰이 만료되었습니다."),
+    REFRESH_TOKEN_TIME_EXPIRED_EXCEPTION(HttpStatus.UNAUTHORIZED, "리프레시 토큰이 만료되었습니다."),
 
     //403
     ROOM_PERMISSION_DENIED(HttpStatus.FORBIDDEN, "방 관련 권한이 없습니다."),

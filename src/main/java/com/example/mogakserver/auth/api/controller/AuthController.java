@@ -2,7 +2,6 @@ package com.example.mogakserver.auth.api.controller;
 
 import com.example.mogakserver.auth.api.request.LoginRequestDTO;
 import com.example.mogakserver.auth.api.request.SignUpRequestDTO;
-import com.example.mogakserver.auth.api.request.TokenRequestDTO;
 import com.example.mogakserver.common.exception.dto.ErrorResponse;
 import com.example.mogakserver.auth.application.response.LoginResponseDto;
 import com.example.mogakserver.auth.application.service.AuthService;
@@ -16,6 +15,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -36,8 +36,8 @@ public class AuthController {
             @ApiResponse(responseCode = "500", description = "서버 내부 오류", content = @ Content(schema = @ Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping("/login")
-    public SuccessResponse<LoginResponseDto> login(@RequestBody LoginRequestDTO loginRequest) {
-        LoginResponseDto loginResponse = authService.login(loginRequest.kakaoCode());
+    public SuccessResponse<LoginResponseDto> login(@RequestBody LoginRequestDTO loginRequest, HttpServletResponse response) {
+        LoginResponseDto loginResponse = authService.login(loginRequest.kakaoCode(), response);
 
         if ("fail".equals(loginResponse.status())) {
             return SuccessResponse.success(SIGNUP_REQUIRED, loginResponse);
@@ -78,18 +78,20 @@ public class AuthController {
         return SuccessResponse.success(LOGOUT_SUCCESS, null);
     }
 
-    @Operation(summary = "[JWT] 토큰 갱신 API", description = "리프레시 토큰 갱신")
+    @Operation(summary = "[JWT] 액세스 토큰 갱신 API", description = "액세스 토큰 갱신")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "토큰 갱신 성공",
+            @ApiResponse(responseCode = "200", description = "액세스 토큰 갱신 성공",
                     content = @Content(schema = @Schema(implementation = TokenPair.class))),
-            @ApiResponse(responseCode = "400", description = "유효하지 않은 리프레시 토큰",
+            @ApiResponse(responseCode = "401", description = "토큰 인증 실패",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "500", description = "서버 내부 오류",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
+    @SecurityRequirement(name = "JWT Auth")
     @PostMapping("/refresh")
-    public SuccessResponse<TokenPair> refresh(@RequestBody final TokenRequestDTO tokenRequestDto) {
-        return SuccessResponse.success(REFRESH_SUCCESS, authService.refresh(tokenRequestDto));
+    public SuccessResponse<TokenPair> refresh(@Parameter(hidden = true) @CookieValue("refreshToken") String refreshToken) {
+        TokenPair tokenPair = authService.refresh(refreshToken);
+        return SuccessResponse.success(REFRESH_SUCCESS, TokenPair.accessTokenResponse(tokenPair.accessToken()));
     }
 
 
