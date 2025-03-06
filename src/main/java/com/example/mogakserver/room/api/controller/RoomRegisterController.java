@@ -28,7 +28,7 @@ public class RoomRegisterController {
     @Operation(summary = "[JWT] 모각방 생성", description = "새로운 모각방을 생성하는 API입니다")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "모각방 생성 성공",
-                    content = @Content(schema = @Schema(implementation = SuccessResponse.class))),
+                    content = @Content(schema = @Schema(implementation = SuccessNonDataResponse.class))),
             @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터입니다",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "500", description = "서버 내부 오류 입니다.",
@@ -47,7 +47,7 @@ public class RoomRegisterController {
     @Operation(summary = "[JWT] 모각방 정보 수정", description = "모각방 정보를 수정하는 API입니다")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "모각방 정보 수정 성공",
-                    content = @Content(schema = @Schema(implementation = SuccessResponse.class))),
+                    content = @Content(schema = @Schema(implementation = SuccessNonDataResponse.class))),
             @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터입니다",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "403", description = "방 관련 권한이 없습니다",
@@ -71,7 +71,7 @@ public class RoomRegisterController {
     @Operation(summary = "[JWT] 모각방 삭제", description = "모각방을 삭제하는 API입니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "모각방 삭제 성공",
-                    content = @Content(schema = @Schema(implementation = SuccessResponse.class))),
+                    content = @Content(schema = @Schema(implementation = SuccessNonDataResponse.class))),
             @ApiResponse(responseCode = "403", description = "방 관련 권한이 없습니다",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "존재하지 않는 모각방입니다",

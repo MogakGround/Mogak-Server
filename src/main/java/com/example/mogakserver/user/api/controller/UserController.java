@@ -5,7 +5,6 @@ import com.example.mogakserver.common.exception.dto.SuccessNonDataResponse;
 import com.example.mogakserver.common.exception.dto.SuccessResponse;
 import com.example.mogakserver.common.exception.enums.SuccessCode;
 import com.example.mogakserver.common.util.resolver.user.UserId;
-import com.example.mogakserver.room.application.response.ScreenShareUsersListDTO;
 import com.example.mogakserver.user.api.request.UpdateProfileRequestDTO;
 import com.example.mogakserver.user.application.response.MyProfileResponseDTO;
 import com.example.mogakserver.user.application.response.RankingDTO;
@@ -29,7 +28,7 @@ public class UserController {
 
     @Operation(summary = "[JWT] 랭킹 리스트 조회", description = "랭킹 리스트 조회 api 입니다")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "랭킹 리스트 조회 성공", content = @Content(schema = @Schema(implementation = ScreenShareUsersListDTO.class))),
+            @ApiResponse(responseCode = "200", description = "랭킹 리스트 조회 성공", content = @Content(schema = @Schema(implementation = RankingListDTO.class))),
             @ApiResponse(responseCode = "404", description = "유저가 존재하지 않습니다", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "500", description = "서버 내부 오류 입니다.", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
     })
@@ -44,7 +43,7 @@ public class UserController {
     }
     @Operation(summary = "[JWT] 내 랭킹 조회", description = "내 랭킹 조회 api 입니다")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "랭킹 조회 성공", content = @Content(schema = @Schema(implementation = ScreenShareUsersListDTO.class))),
+            @ApiResponse(responseCode = "200", description = "랭킹 조회 성공", content = @Content(schema = @Schema(implementation = RankingDTO.class))),
             @ApiResponse(responseCode = "404", description = "유저가 존재하지 않습니다", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "500", description = "서버 내부 오류 입니다.", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
     })
@@ -75,7 +74,7 @@ public class UserController {
 
     @Operation(summary = "[JWT] 내 프로필 조회", description = "내 프로필 조회 api 입니다")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "프로필 조회 성공", content = @Content(schema = @Schema(implementation = ScreenShareUsersListDTO.class))),
+            @ApiResponse(responseCode = "200", description = "프로필 조회 성공", content = @Content(schema = @Schema(implementation = MyProfileResponseDTO.class))),
             @ApiResponse(responseCode = "404", description = "유저가 존재하지 않습니다", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "500", description = "서버 내부 오류 입니다.", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
     })
@@ -89,7 +88,7 @@ public class UserController {
 
     @Operation(summary = "[JWT] 내 프로필 수정", description = "내 프로필 수정 api 입니다")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "프로필 조회 성공", content = @Content(schema = @Schema(implementation = ScreenShareUsersListDTO.class))),
+            @ApiResponse(responseCode = "200", description = "프로필 조회 성공", content = @Content(schema = @Schema(implementation = SuccessNonDataResponse.class))),
             @ApiResponse(responseCode = "404", description = "유저가 존재하지 않습니다", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "500", description = "서버 내부 오류 입니다.", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
     })
