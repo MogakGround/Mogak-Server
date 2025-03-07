@@ -11,22 +11,21 @@ public record LoginResponseDto(
         @JsonProperty("status")
         String status,
 
-        String accessToken,
-        String refreshToken
+        String accessToken
 ) {
 
     // 신규 사용자 로그인
     public static LoginResponseDto NewUserResponse(Long kakaoId) {
-        return new LoginResponseDto(kakaoId, "fail", null, null);
+        return new LoginResponseDto(kakaoId, "fail", null);
     }
 
     // 기존 사용자 로그인
-    public static LoginResponseDto ExistingUserResponse(String accessToken, String refreshToken) {
-        return new LoginResponseDto(null, "success", accessToken, refreshToken);
+    public static LoginResponseDto ExistingUserResponse(String accessToken) {
+        return new LoginResponseDto(null, "success", accessToken);
     }
 
     // 회원가입
-    public static LoginResponseDto SignupResponse(String accessToken, String refreshToken) {
-        return new LoginResponseDto(null, null, accessToken, refreshToken);
+    public static LoginResponseDto SignupResponse(String accessToken) {
+        return new LoginResponseDto(null, null, accessToken);
     }
 }

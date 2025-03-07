@@ -33,6 +33,7 @@ public class JwtService {
     public static final long DAYS_IN_MILLISECONDS = 24 * 60 * 60 * 1000L;
     public static final int ACCESS_TOKEN_EXPIRATION_MINUTE = 60;
     public static final int REFRESH_TOKEN_EXPIRATION_DAYS = 14;
+    private static final int REFRESH_TOKEN_RENEW_EXPIRATION_DAYS = 3;
     private final RedisTemplate<String, String> redisTemplate;
 
     @PostConstruct
@@ -57,7 +58,7 @@ public class JwtService {
 
     public boolean verifyToken(final String token) {
         try {
-            final Claims claims = getBody(token);
+            getBody(token);
             return true;
         } catch (RuntimeException e) {
             if (e instanceof ExpiredJwtException) {
@@ -79,14 +80,22 @@ public class JwtService {
         return new TokenPair(accessToken, refreshToken);
     }
 
-    public boolean compareRefreshToken(final String userId, final String refreshToken) {
-        final String storedRefreshToken = redisTemplate.opsForValue().get(userId);
-        if (storedRefreshToken == null) return false;
-        return storedRefreshToken.equals(refreshToken);
-    }
-
     public void saveRefreshToken(final String userId, final String refreshToken) {
         redisTemplate.opsForValue().set(userId, refreshToken, REFRESH_TOKEN_EXPIRATION_DAYS, TimeUnit.DAYS);
+    }
+
+    public boolean hasValidRefreshToken(String userId) {
+        return redisTemplate.hasKey(getRefreshTokenKey(userId));
+    }
+
+    public String getStoredRefreshToken(String userId) {
+        return redisTemplate.opsForValue().get(getRefreshTokenKey(userId));
+    }
+
+    public boolean isRefreshTokenExpiringSoon(String refreshToken) {
+        Date expirationDate = getExpirationDate(refreshToken);
+        long remainingTime = expirationDate.getTime() - System.currentTimeMillis();
+        return TimeUnit.MILLISECONDS.toDays(remainingTime) <= REFRESH_TOKEN_RENEW_EXPIRATION_DAYS;
     }
 
     private String createToken(final Claims claims) {
@@ -126,7 +135,18 @@ public class JwtService {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
+    private String getRefreshTokenKey(String userId) {
+        return "refresh_token:" + userId;
+    }
+
+    private Date getExpirationDate(String token) {
+        Claims claims = getBody(token);
+        return claims.getExpiration();
+    }
+
     public void deleteRefreshToken(final String userId) {
         redisTemplate.delete(userId);
     }
+
+
 }
