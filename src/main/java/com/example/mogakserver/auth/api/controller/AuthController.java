@@ -73,8 +73,8 @@ public class AuthController {
     })
     @SecurityRequirement(name = "JWT Auth")
     @PostMapping("/logout")
-    public SuccessResponse<Void> logout(@Parameter(hidden = true) @UserId Long userId) {
-        authService.logout(userId);
+    public SuccessResponse<Void> logout(@Parameter(hidden = true) @UserId Long userId, HttpServletResponse response) {
+        authService.logout(userId, response);
         return SuccessResponse.success(LOGOUT_SUCCESS, null);
     }
 
@@ -105,8 +105,8 @@ public class AuthController {
     })
     @PostMapping("/delete")
     @SecurityRequirement(name = "JWT Auth")
-    public SuccessResponse<Void> deleteUser(@Parameter(hidden = true) @UserId Long userId) {
-        authService.deleteUser(userId);
+    public SuccessResponse<Void> deleteUser(@Parameter(hidden = true) @UserId Long userId, HttpServletResponse response) {
+        authService.deleteUser(userId, response);
         return SuccessResponse.success(USER_DELETION_SUCCESS, null);
     }
 }

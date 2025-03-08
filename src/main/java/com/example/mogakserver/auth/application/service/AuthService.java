@@ -112,10 +112,20 @@ public class AuthService {
         return LoginResponseDto.SignupResponse(tokenPair.accessToken());
     }
 
-    public void logout(final Long userId) {
+    public void logout(final Long userId, HttpServletResponse response) {
         jpaUserRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(USER_NOT_FOUND_EXCEPTION));
         jwtService.deleteRefreshToken(String.valueOf(userId));
+
+        ResponseCookie deleteCookie = ResponseCookie.from("refreshToken", "")
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(0)
+                .sameSite("None")
+                .build();
+
+        response.addHeader("Set-Cookie", deleteCookie.toString());
     }
 
     public TokenPair refresh(final String refreshToken) {
@@ -134,7 +144,7 @@ public class AuthService {
         return TokenPair.accessTokenResponse(jwtService.createAccessToken(userId));
     }
 
-    public void deleteUser(Long userId) {
+    public void deleteUser(Long userId, HttpServletResponse response) {
         User user = jpaUserRepository.findById(userId).orElseThrow(() -> new NotFoundException(USER_NOT_FOUND_EXCEPTION));
         jwtService.deleteRefreshToken(String.valueOf(userId));
 
@@ -142,6 +152,16 @@ public class AuthService {
         quitUserFromRooms(userId);
 
         jpaUserRepository.delete(user);
+
+        ResponseCookie deleteCookie = ResponseCookie.from("refreshToken", "")
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(0)
+                .sameSite("None")
+                .build();
+
+        response.addHeader("Set-Cookie", deleteCookie.toString());
     }
 
     private void deleteHostedRooms(Long userId) {
