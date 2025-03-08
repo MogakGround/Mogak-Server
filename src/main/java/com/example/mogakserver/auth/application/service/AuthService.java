@@ -47,7 +47,7 @@ public class AuthService {
 
         User user = jpaUserRepository.findByKakaoId(kakaoId).orElse(null);
 
-        if (user == null) {
+        if (user == null || user.getNickName().isEmpty()) {
             jpaUserRepository.save(User.builder().kakaoId(kakaoId).build());
             return LoginResponseDto.NewUserResponse(kakaoId);
         }
@@ -74,7 +74,7 @@ public class AuthService {
         return LoginResponseDto.ExistingUserResponse(tokenPair.accessToken());
     }
 
-    public LoginResponseDto signUp(SignUpRequestDTO signUpRequest) {
+    public LoginResponseDto signUp(SignUpRequestDTO signUpRequest, HttpServletResponse response) {
         if (signUpRequest.kakaoId() == null) {
             throw new UnAuthorizedException(EMPTY_KAKAO_ID_EXCEPTION);
         }
@@ -96,6 +96,19 @@ public class AuthService {
         jpaUserRepository.save(user);
 
         TokenPair tokenPair = jwtService.generateTokenPair(String.valueOf(user.getId()));
+
+        jwtService.saveRefreshToken(String.valueOf(user.getId()), tokenPair.refreshToken());
+
+        ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", tokenPair.refreshToken())
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(14 * 24 * 60 * 60)
+                .sameSite("None")
+                .build();
+
+        response.addHeader("Set-Cookie", refreshTokenCookie.toString());
+
         return LoginResponseDto.SignupResponse(tokenPair.accessToken());
     }
 

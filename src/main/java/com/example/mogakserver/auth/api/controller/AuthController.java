@@ -58,8 +58,8 @@ public class AuthController {
     })
     @PostMapping("/signup")
     public SuccessResponse<LoginResponseDto> signUp(
-            @RequestBody SignUpRequestDTO signUpRequest) {
-        return SuccessResponse.success(SOCIAL_LOGIN_SUCCESS, authService.signUp(signUpRequest));
+            @RequestBody SignUpRequestDTO signUpRequest, HttpServletResponse response) {
+        return SuccessResponse.success(SOCIAL_LOGIN_SUCCESS, authService.signUp(signUpRequest, response));
     }
 
 
