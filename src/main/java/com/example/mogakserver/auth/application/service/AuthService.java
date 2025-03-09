@@ -47,8 +47,10 @@ public class AuthService {
 
         User user = jpaUserRepository.findByKakaoId(kakaoId).orElse(null);
 
-        if (user == null) {
-            jpaUserRepository.save(User.builder().kakaoId(kakaoId).build());
+        if (user.getNickName() == null) {
+            if(user == null) {
+                jpaUserRepository.save(User.builder().kakaoId(kakaoId).build());
+            }
             return LoginResponseDto.NewUserResponse(kakaoId);
         }
 
@@ -65,7 +67,7 @@ public class AuthService {
                     .secure(true)
                     .path("/")
                     .maxAge(14 * 24 * 60 * 60)
-                    .sameSite("Strict")
+                    .sameSite("None")
                     .build();
 
             response.addHeader("Set-Cookie", refreshTokenCookie.toString());
@@ -74,7 +76,7 @@ public class AuthService {
         return LoginResponseDto.ExistingUserResponse(tokenPair.accessToken());
     }
 
-    public LoginResponseDto signUp(SignUpRequestDTO signUpRequest) {
+    public LoginResponseDto signUp(SignUpRequestDTO signUpRequest, HttpServletResponse response) {
         if (signUpRequest.kakaoId() == null) {
             throw new UnAuthorizedException(EMPTY_KAKAO_ID_EXCEPTION);
         }
@@ -96,13 +98,36 @@ public class AuthService {
         jpaUserRepository.save(user);
 
         TokenPair tokenPair = jwtService.generateTokenPair(String.valueOf(user.getId()));
+
+        jwtService.saveRefreshToken(String.valueOf(user.getId()), tokenPair.refreshToken());
+
+        ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", tokenPair.refreshToken())
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(14 * 24 * 60 * 60)
+                .sameSite("None")
+                .build();
+
+        response.addHeader("Set-Cookie", refreshTokenCookie.toString());
+
         return LoginResponseDto.SignupResponse(tokenPair.accessToken());
     }
 
-    public void logout(final Long userId) {
+    public void logout(final Long userId, HttpServletResponse response) {
         jpaUserRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(USER_NOT_FOUND_EXCEPTION));
         jwtService.deleteRefreshToken(String.valueOf(userId));
+
+        ResponseCookie deleteCookie = ResponseCookie.from("refreshToken", "")
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(0)
+                .sameSite("None")
+                .build();
+
+        response.addHeader("Set-Cookie", deleteCookie.toString());
     }
 
     public TokenPair refresh(final String refreshToken) {
@@ -121,7 +146,7 @@ public class AuthService {
         return TokenPair.accessTokenResponse(jwtService.createAccessToken(userId));
     }
 
-    public void deleteUser(Long userId) {
+    public void deleteUser(Long userId, HttpServletResponse response) {
         User user = jpaUserRepository.findById(userId).orElseThrow(() -> new NotFoundException(USER_NOT_FOUND_EXCEPTION));
         jwtService.deleteRefreshToken(String.valueOf(userId));
 
@@ -129,6 +154,16 @@ public class AuthService {
         quitUserFromRooms(userId);
 
         jpaUserRepository.delete(user);
+
+        ResponseCookie deleteCookie = ResponseCookie.from("refreshToken", "")
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(0)
+                .sameSite("None")
+                .build();
+
+        response.addHeader("Set-Cookie", deleteCookie.toString());
     }
 
     private void deleteHostedRooms(Long userId) {
