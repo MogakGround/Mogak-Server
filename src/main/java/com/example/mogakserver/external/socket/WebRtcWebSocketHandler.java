@@ -12,6 +12,7 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -31,7 +32,7 @@ public class WebRtcWebSocketHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         Long roomId = getRoomId(session);
-        Long userId = getUserIdFromHeader(session);
+        Long userId = getUserIdFromQuery(session);
 
         if (sessionMap.containsKey(userId)) {
             WebSocketSession existingSession = sessionMap.get(userId);
@@ -68,7 +69,7 @@ public class WebRtcWebSocketHandler extends TextWebSocketHandler {
         }
         String messageType = messageDto.type();
         Long roomId = getRoomId(session);
-        Long userId = getUserIdFromHeader(session);
+        Long userId = getUserIdFromQuery(session);
         String eventMessage = redisService.serializeMessage(createEventMessage(messageType, userId));
         switch (messageDto.type()) {
             case "screen-share-start":
@@ -103,7 +104,7 @@ public class WebRtcWebSocketHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
         Long roomId = getRoomId(session);
-        Long userId = getUserIdFromHeader(session);
+        Long userId = getUserIdFromQuery(session);
 
         webSocketBroadcaster.removeSession(roomId, session);
         sessionMap.remove(userId);
@@ -121,24 +122,30 @@ public class WebRtcWebSocketHandler extends TextWebSocketHandler {
         }
     }
 
-    private Long getUserIdFromHeader(WebSocketSession session) {
-        String token = session.getHandshakeHeaders().getFirst("Authorization");
-        if (token == null || !token.startsWith("Bearer ")) {
-            throw new IllegalArgumentException("Authorization header missing or invalid");
+    private Long getUserIdFromQuery(WebSocketSession session) {
+        String query = session.getUri().getQuery();
+        if (query == null || !query.contains("token=")) {
+            throw new IllegalArgumentException("Token query parameter missing");
         }
 
-        String encodedUserId = token.substring("Bearer ".length());
-        if (!jwtService.verifyToken(encodedUserId)) {
+        String token = Arrays.stream(query.split("&"))
+            .filter(param -> param.startsWith("token="))
+            .findFirst()
+            .map(param -> param.substring("token=".length()))
+            .orElseThrow(() -> new IllegalArgumentException("Token parameter not found"));
+
+        if (!jwtService.verifyToken(token)) {
             throw new IllegalArgumentException("Invalid token");
         }
 
-        String decodedUserId = jwtService.getUserIdInToken(encodedUserId);
+        String decodedUserId = jwtService.getUserIdInToken(token);
         try {
             return Long.parseLong(decodedUserId);
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("Invalid userId in token");
         }
     }
+
     private MessageDTO createEventMessage(String type, Long userId) {
         return new MessageDTO(type, userId);
     }
