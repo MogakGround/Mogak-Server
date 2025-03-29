@@ -15,6 +15,7 @@ public enum ErrorCode {
     VALIDATION_REQUEST_MISSING_EXCEPTION(HttpStatus.BAD_REQUEST, "요청값이 유효하지 않습니다."),
     INVALID_ENUM_TYPE_EXCEPTION(HttpStatus.BAD_REQUEST, "요청한 상수 값이 유효하지 않습니다."),
     INVALID_EMPTY_TYPE_EXCEPTION(HttpStatus.BAD_REQUEST, "해당 값은 null 또 상수 값이 유효하지 않습니다."),
+    ROOM_IS_FULL(HttpStatus.BAD_REQUEST, "방의 최대 인원 수를 초과했습니다."),
 
     // 401
     EMPTY_KAKAO_CODE_EXCEPTION(HttpStatus.UNAUTHORIZED, "카카오 인증을 위해 유효한 코드를 제공해 주세요."),

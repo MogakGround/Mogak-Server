@@ -1,6 +1,7 @@
 package com.example.mogakserver.roomuser.application.service;
 
 import com.example.mogakserver.common.exception.enums.ErrorCode;
+import com.example.mogakserver.common.exception.model.BadRequestException;
 import com.example.mogakserver.common.exception.model.NotFoundException;
 import com.example.mogakserver.common.exception.model.UnAuthorizedException;
 import com.example.mogakserver.external.redis.RedisService;
@@ -284,6 +285,11 @@ public class RoomUserService {
         Long roomUserId;
         boolean exists = roomUserRepository.existsByRoomIdAndUserId(roomId, userId);
         if (!exists) {
+            int currentUserCnt = roomUserRepository.countByRoomId(roomId);
+            if (currentUserCnt >= 5) {
+                throw new BadRequestException(ErrorCode.ROOM_IS_FULL);
+            }
+
             RoomUser roomUser = RoomUser.builder()
                     .roomId(roomId)
                     .userId(userId)
