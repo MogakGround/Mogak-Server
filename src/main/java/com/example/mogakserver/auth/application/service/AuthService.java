@@ -47,10 +47,12 @@ public class AuthService {
 
         User user = jpaUserRepository.findByKakaoId(kakaoId).orElse(null);
 
+        if (user == null) {
+            jpaUserRepository.save(User.builder().kakaoId(kakaoId).build());
+            return LoginResponseDto.NewUserResponse(kakaoId);
+        }
+
         if (user.getNickName() == null) {
-            if(user == null) {
-                jpaUserRepository.save(User.builder().kakaoId(kakaoId).build());
-            }
             return LoginResponseDto.NewUserResponse(kakaoId);
         }
 
