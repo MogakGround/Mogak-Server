@@ -163,6 +163,7 @@ public class RoomUserService {
                             room.getRoomExplain(),
                             workHourMap.getOrDefault(room.getId(), Collections.emptyList()),
                             room.isLocked(),
+                            room.getUserCnt(),
                             room.getRoomPassword(),
                             hour, min, sec
                     );
