@@ -13,6 +13,7 @@ public record MyPageUserRoomDTO(
         String roomExplain,
         List<WorkHour> workHour,
         boolean isLocked,
+        int userCnt,
         String roomPassword,
         int hour,
         int min,
