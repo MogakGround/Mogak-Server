@@ -48,4 +48,14 @@ public class RedisService {
             throw new RuntimeException("Failed to serialize message", e);
         }
     }
+
+    public String serializeObjectMessage(Object obj) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            return objectMapper.writeValueAsString(obj);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Serialization failed", e);
+        }
+    }
+
 }

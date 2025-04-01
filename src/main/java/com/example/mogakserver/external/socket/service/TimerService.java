@@ -90,4 +90,10 @@ public class TimerService {
         long totalElapsedTime = elapsedTime + currentElapsedTime;
         return totalElapsedTime;
     }
+
+    public boolean isTimerRunning(Long roomId, Long userId) {
+        String key = "timer-room-" + roomId;
+        String isRunning = (String) redisTemplate.opsForHash().get(key, userId + "-isRunning");
+        return "true".equalsIgnoreCase(isRunning);
+    }
 }

@@ -1,10 +1,17 @@
 package com.example.mogakserver.external.socket;
 
 import com.example.mogakserver.common.config.jwt.JwtService;
+import com.example.mogakserver.common.exception.enums.ErrorCode;
+import com.example.mogakserver.common.exception.model.NotFoundException;
 import com.example.mogakserver.external.redis.RedisService;
 import com.example.mogakserver.external.socket.dto.MessageDTO;
+import com.example.mogakserver.external.socket.dto.MessageWrapper;
+import com.example.mogakserver.external.socket.dto.ParticipantDTO;
 import com.example.mogakserver.external.socket.service.ScreenShareService;
 import com.example.mogakserver.external.socket.service.TimerService;
+import com.example.mogakserver.user.domain.entity.User;
+import com.example.mogakserver.user.infra.repository.JpaUserRepository;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
@@ -13,6 +20,7 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -28,6 +36,7 @@ public class WebRtcWebSocketHandler extends TextWebSocketHandler {
     private final TimerService timerService;
 
     public static final Map<Long, WebSocketSession> sessionMap = new ConcurrentHashMap<>();
+    private final JpaUserRepository jpaUserRepository;
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
@@ -40,7 +49,8 @@ public class WebRtcWebSocketHandler extends TextWebSocketHandler {
             sessionMap.remove(userId);
         }
 
-        sessionMap.put(userId, session);
+        session.getAttributes().put("userId", userId);
+        // sessionMap.put(userId, session);
         webSocketBroadcaster.addSession(roomId, session);
 
         redisService.subscribeToRoom(roomId);
@@ -57,7 +67,19 @@ public class WebRtcWebSocketHandler extends TextWebSocketHandler {
             webSocketBroadcaster.broadcast(roomId, redisService.serializeMessage(createEventMessage("screen-share-start", userId)));
         }
 
+        String userNickName = getUserNickName(userId);
+        boolean isRunning = timerService.isTimerRunning(roomId, userId);
+        ParticipantDTO participant = new ParticipantDTO(userId, userNickName, isRunning);
+
+        String joinMessage = redisService.serializeObjectMessage(new MessageWrapper("participant-joined", participant));
         redisService.publishEvent(roomId, "participant-joined", userId);
+        webSocketBroadcaster.broadcast(roomId, joinMessage);
+    }
+
+    private String getUserNickName(Long userId) {
+        User user = jpaUserRepository.findById(userId).orElseThrow(()-> new NotFoundException(ErrorCode.USER_NOT_FOUND_EXCEPTION));
+        String userNickName = user.getNickName();
+        return userNickName;
     }
 
     @Override
@@ -69,7 +91,7 @@ public class WebRtcWebSocketHandler extends TextWebSocketHandler {
         }
         String messageType = messageDto.type();
         Long roomId = getRoomId(session);
-        Long userId = getUserIdFromQuery(session);
+        Long userId = getUserIdFromSession(session);
         String eventMessage = redisService.serializeMessage(createEventMessage(messageType, userId));
         switch (messageDto.type()) {
             case "screen-share-start":
@@ -104,8 +126,8 @@ public class WebRtcWebSocketHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
         Long roomId = getRoomId(session);
-        Long userId = getUserIdFromQuery(session);
-
+        Long userId = getUserIdFromSession(session);
+        timerService.stopTimer(roomId, userId);
         webSocketBroadcaster.removeSession(roomId, session);
         sessionMap.remove(userId);
 
@@ -145,6 +167,15 @@ public class WebRtcWebSocketHandler extends TextWebSocketHandler {
             throw new IllegalArgumentException("Invalid userId in token");
         }
     }
+
+    private Long getUserIdFromSession(WebSocketSession session) {
+        Long userId = (Long) session.getAttributes().get("userId");
+        if (userId == null) {
+            throw new IllegalArgumentException("UserId not found in session");
+        }
+        return userId;
+    }
+
 
     private MessageDTO createEventMessage(String type, Long userId) {
         return new MessageDTO(type, userId);

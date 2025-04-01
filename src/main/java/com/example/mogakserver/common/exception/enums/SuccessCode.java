@@ -34,7 +34,8 @@ public enum SuccessCode {
     UPDATE_MY_PROFILE(HttpStatus.OK, "프로필 수정 성공입니다."),
     ROOM_ENTER_SUCCESS(HttpStatus.OK, "방 들어가기 성공입니다."),
     ROOM_QUIT_SUCCESS(HttpStatus.OK, "방 나가기 성공입니다."),
-    GET_RANKING_SUCCESS(HttpStatus.OK, "랭킹 조회 성공입니다.");
+    GET_RANKING_SUCCESS(HttpStatus.OK, "랭킹 조회 성공입니다."),
+    USER_WSTOKEN_SUCCESS(HttpStatus.OK, "웹소켓 토큰 생성 성공입니다.");
 
     private final HttpStatus httpStatus;
     private final String message;

@@ -109,5 +109,20 @@ public class AuthController {
         authService.deleteUser(userId, response);
         return SuccessResponse.success(USER_DELETION_SUCCESS, null);
     }
+
+    @Operation(summary = "[JWT] 웹소켓 토큰 발급 API", description = "웹소켓 토큰 발급")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "웹소켓 토큰 발급 성공"),
+        @ApiResponse(responseCode = "401", description = "회원 인증 실패",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+        @ApiResponse(responseCode = "500", description = "서버 내부 오류",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PostMapping("/wsToken")
+    @SecurityRequirement(name = "JWT Auth")
+    public SuccessResponse<String> createWsToken(@Parameter(hidden = true) @UserId Long userId) {
+        String wsToken = authService.createWsToken(userId);
+        return SuccessResponse.success(USER_WSTOKEN_SUCCESS, wsToken);
+    }
 }
 
