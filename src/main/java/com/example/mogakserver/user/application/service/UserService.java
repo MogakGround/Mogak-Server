@@ -85,6 +85,7 @@ public class UserService {
         UserRankAndTime rankAndTime = getUserRankAndTime(userId);
 
         return MyProfileResponseDTO.builder()
+                .userId(userId)
                 .nickName(user.getNickName())
                 .portfolioUrl(user.getPortfolioUrl())
                 .rank(rankAndTime.rank())

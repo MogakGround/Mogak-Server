@@ -15,11 +15,19 @@ import org.springframework.stereotype.Service;
 public class RedisService {
 
     private final RedisTemplate<String, String> redisTemplate;
+    private final RedisMessageListenerContainer redisMessageListenerContainer;
+    private final RedisMessageSubscriber subscriber;
+
     private static final String CHANNEL_PREFIX = "room-";
 
     public void subscribeToRoom(Long roomId) {
-        RedisMessageListenerContainer container = new RedisMessageListenerContainer();
-        container.addMessageListener(new MessageListenerAdapter(), new PatternTopic(getChannelName(roomId)));
+        String channelName = getChannelName(roomId);
+        redisMessageListenerContainer.addMessageListener(subscriber, new PatternTopic(channelName));
+    }
+
+    public void unsubscribeToRoom(Long roomId) {
+        String channelName = getChannelName(roomId);
+        redisMessageListenerContainer.removeMessageListener(subscriber, new PatternTopic(channelName));
     }
 
     public void publishEvent(Long roomId, String eventType, Long userId) {
@@ -46,6 +54,15 @@ public class RedisService {
             return objectMapper.writeValueAsString(message);
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Failed to serialize message", e);
+        }
+    }
+
+    public String serializeObjectMessage(Object obj) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            return objectMapper.writeValueAsString(obj);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Serialization failed", e);
         }
     }
 }

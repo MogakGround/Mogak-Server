@@ -185,4 +185,8 @@ public class AuthService {
 
         roomUserRepository.deleteByUserId(userId);
     }
+
+    public String createWsToken(Long userId) {
+        return jwtService.createWsToken(userId);
+    }
 }

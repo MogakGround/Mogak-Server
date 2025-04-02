@@ -106,6 +106,20 @@ public class JwtService {
                 .compact();
     }
 
+    public String createWsToken(Long userId) {
+        Date now = new Date();
+        Date expiry = new Date(now.getTime() + 1000 * 60); // 1분짜리 토큰
+
+        return Jwts.builder()
+            .setSubject("WS_TOKEN")
+            .claim("USER_ID", userId.toString())
+            .setIssuedAt(now)
+            .setExpiration(expiry)
+            .signWith(getSigningKey())
+            .compact();
+    }
+
+
     private Claims getRefreshTokenClaims() {
         final Date now = new Date();
         return Jwts.claims()

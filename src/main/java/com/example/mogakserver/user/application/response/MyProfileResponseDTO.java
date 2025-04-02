@@ -4,6 +4,7 @@ import lombok.Builder;
 
 @Builder
 public record MyProfileResponseDTO(
+		Long userId,
         String nickName,
         String portfolioUrl,
         int rank,
