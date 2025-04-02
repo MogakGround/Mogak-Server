@@ -127,11 +127,13 @@ public class WebRtcWebSocketHandler extends TextWebSocketHandler {
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
         Long roomId = getRoomId(session);
         Long userId = getUserIdFromSession(session);
-        timerService.stopTimer(roomId, userId);
+        if(timerService.isTimerRunning(roomId, userId)) {
+            timerService.stopTimer(roomId, userId);
+        }
         webSocketBroadcaster.removeSession(roomId, session);
         sessionMap.remove(userId);
-
         redisService.publishEvent(roomId, "participant-left", userId);
+        redisService.unsubscribeToRoom(roomId);
     }
 
     private Long getRoomId(WebSocketSession session) {
