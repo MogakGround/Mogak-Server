@@ -26,16 +26,14 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
     private final UserService userService;
 
-    @Operation(summary = "[JWT] 랭킹 리스트 조회", description = "랭킹 리스트 조회 api 입니다")
+    @Operation(summary = "랭킹 리스트 조회", description = "랭킹 리스트 조회 api 입니다")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "랭킹 리스트 조회 성공", content = @Content(schema = @Schema(implementation = RankingListDTO.class))),
             @ApiResponse(responseCode = "404", description = "유저가 존재하지 않습니다", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "500", description = "서버 내부 오류 입니다.", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
     })
-    @SecurityRequirement(name = "JWT Auth")
     @GetMapping("/rankings")
     public SuccessResponse<RankingListDTO> getRankingList(
-            @Parameter(hidden = true, required = false) @UserId Long userId,
             @Parameter(name = "page", description = "페이지 ") @RequestParam(value = "page") int page,
             @Parameter(name = "size", description = "페이지 ") @RequestParam(value = "size") int size
     ) {
