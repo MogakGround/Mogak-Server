@@ -160,6 +160,7 @@ public class JwtService {
 
     public void deleteRefreshToken(final String userId) {
         redisTemplate.delete(userId);
+        redisTemplate.opsForZSet().remove("user_ranking", userId);
     }
 
 
