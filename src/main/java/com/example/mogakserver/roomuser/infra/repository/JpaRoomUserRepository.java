@@ -42,4 +42,6 @@ public interface JpaRoomUserRepository extends JpaRepository<RoomUser, Long> {
     boolean existsByRoomIdAndUserId(Long roomId, Long userId);
 
     int countByRoomId(Long roomId);
+
+    void deleteByUserIdAndRoomId(Long userId, Long roomId);
 }

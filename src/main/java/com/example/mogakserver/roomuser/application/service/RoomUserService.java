@@ -326,6 +326,8 @@ public class RoomUserService {
         // 세션 정리 (사용자 정보는 유지)
         webSocketBroadcaster.removeSession(roomId, sessionMap.get(userId));
         sessionMap.remove(userId);
+
+        roomUserRepository.deleteByUserIdAndRoomId(userId, roomId);
     }
 }
 
