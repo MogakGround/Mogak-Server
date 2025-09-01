@@ -1,5 +1,8 @@
 package com.example.mogakserver.room.api.controller;
 
+import static com.example.mogakserver.common.exception.enums.SuccessCode.ROOM_CREATION_SUCCESS;
+import static com.example.mogakserver.common.exception.enums.SuccessCode.SOCIAL_LOGIN_SUCCESS;
+
 import com.example.mogakserver.common.exception.dto.ErrorResponse;
 import com.example.mogakserver.common.exception.dto.SuccessNonDataResponse;
 import com.example.mogakserver.common.exception.dto.SuccessResponse;
@@ -7,6 +10,7 @@ import com.example.mogakserver.common.exception.enums.SuccessCode;
 import com.example.mogakserver.common.util.resolver.user.UserId;
 import com.example.mogakserver.room.api.request.RoomRequestDTO;
 import com.example.mogakserver.room.api.request.RoomUpdateDTO;
+import com.example.mogakserver.room.application.response.RoomIdDTO;
 import com.example.mogakserver.room.application.service.RoomRegisterService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -17,6 +21,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -25,6 +31,7 @@ import org.springframework.web.bind.annotation.*;
 public class RoomRegisterController {
     private final RoomRegisterService roomRegisterService;
 
+    @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "[JWT] 모각방 생성", description = "새로운 모각방을 생성하는 API입니다")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "모각방 생성 성공",
@@ -36,12 +43,12 @@ public class RoomRegisterController {
     })
     @SecurityRequirement(name = "JWT Auth")
     @PostMapping
-    public SuccessNonDataResponse createRoom(
+    public SuccessResponse<RoomIdDTO> createRoom(
             @Parameter(hidden = true) @UserId Long userId,
             @Valid @RequestBody RoomRequestDTO roomRequestDTO
     ) {
-        roomRegisterService.createRoom(userId, roomRequestDTO);
-        return SuccessNonDataResponse.success(SuccessCode.ROOM_CREATION_SUCCESS);
+        RoomIdDTO roomId = roomRegisterService.createRoom(userId, roomRequestDTO);
+        return SuccessResponse.success(ROOM_CREATION_SUCCESS, roomId);
     }
 
     @Operation(summary = "[JWT] 모각방 정보 수정", description = "모각방 정보를 수정하는 API입니다")

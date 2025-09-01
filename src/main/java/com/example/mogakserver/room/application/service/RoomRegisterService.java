@@ -5,6 +5,7 @@ import com.example.mogakserver.common.exception.model.NotFoundException;
 import com.example.mogakserver.common.exception.model.UnAuthorizedException;
 import com.example.mogakserver.room.api.request.RoomRequestDTO;
 import com.example.mogakserver.room.api.request.RoomUpdateDTO;
+import com.example.mogakserver.room.application.response.RoomIdDTO;
 import com.example.mogakserver.room.domain.entity.Room;
 import com.example.mogakserver.room.infra.repository.JpaRoomRepository;
 import com.example.mogakserver.roomimg.domain.entity.RoomImg;
@@ -30,7 +31,7 @@ public class RoomRegisterService {
     private final JpaRoomUserRepository roomUserRepository;
 
     @Transactional
-    public void createRoom(Long userId, RoomRequestDTO roomRequest) {
+    public RoomIdDTO createRoom(Long userId, RoomRequestDTO roomRequest) {
         Room room = Room.builder()
                 .roomName(roomRequest.getRoomName())
                 .roomExplain(roomRequest.getRoomExplain())
@@ -65,6 +66,10 @@ public class RoomRegisterService {
                 .collect(Collectors.toList());
 
         workTimeRepository.saveAll(workTimes);
+
+        return RoomIdDTO.builder()
+                .roomId(room.getId())
+                .build();
     }
 
     @Transactional
