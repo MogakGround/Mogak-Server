@@ -170,7 +170,7 @@ public class WebRtcWebSocketHandler extends TextWebSocketHandler {
         }
     }
 
-    private Long getUserIdFromSession(WebSocketSession session) {
+    public Long getUserIdFromSession(WebSocketSession session) {
         Long userId = (Long) session.getAttributes().get("userId");
         if (userId == null) {
             throw new IllegalArgumentException("UserId not found in session");
@@ -181,6 +181,10 @@ public class WebRtcWebSocketHandler extends TextWebSocketHandler {
 
     private MessageDTO createEventMessage(String type, Long userId) {
         return new MessageDTO(type, userId);
+    }
+
+    public List<WebSocketSession> getSessionsByRoomId(Long roomId) {
+        return webSocketBroadcaster.getSessions(roomId);
     }
 }
 

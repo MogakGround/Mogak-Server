@@ -5,6 +5,7 @@ import com.example.mogakserver.common.exception.model.BadRequestException;
 import com.example.mogakserver.common.exception.model.NotFoundException;
 import com.example.mogakserver.common.exception.model.UnAuthorizedException;
 import com.example.mogakserver.external.redis.RedisService;
+import com.example.mogakserver.external.socket.WebRtcWebSocketHandler;
 import com.example.mogakserver.external.socket.WebSocketBroadCaster;
 import com.example.mogakserver.external.socket.service.ScreenShareService;
 import com.example.mogakserver.external.socket.service.TimerService;
@@ -30,6 +31,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.socket.WebSocketHandler;
+import org.springframework.web.socket.WebSocketSession;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -55,6 +58,8 @@ public class RoomUserService {
     private final TimerService timerService;
     private final RedisService redisService;
     private final WebSocketBroadCaster webSocketBroadcaster;
+    private final WebSocketHandler webSocketHandler;
+    private final WebRtcWebSocketHandler webRtcWebSocketHandler;
 
     public void updateIsScreenShareLargeAllowed(Long userId, Long roomId){
         RoomUser roomUser = roomUserRepository.findByUserIdAndRoomId(userId, roomId).orElseThrow(()->new NotFoundException(ErrorCode.NOT_FOUND_ROOM_EXCEPTION));
@@ -216,21 +221,29 @@ public class RoomUserService {
 
     @Transactional(readOnly = true)
     public RoomUserListDTO getRoomUsers(Long userId, Long roomId) {
-        boolean isParticipant = roomUserRepository.findByUserIdAndRoomId(userId, roomId).isPresent();
+        List<WebSocketSession> roomSessions = webRtcWebSocketHandler.getSessionsByRoomId(roomId);
+        if(roomSessions==null || roomSessions.isEmpty()){
+            throw new NotFoundException(ErrorCode.ROOM_NOT_FOUND_EXCEPTION);
+        }
+        // 본인이 해당 방 참여자인지 검증
+        boolean isParticipant = roomSessions.stream()
+            .anyMatch(session -> userId.equals(webRtcWebSocketHandler.getUserIdFromSession(session)));
+
         if (!isParticipant) {
             throw new NotFoundException(ErrorCode.ROOM_PERMISSION_DENIED);
         }
 
-        List<RoomUserDTO> users = roomUserRepository.findByRoomId(roomId).stream()
-                .map(roomUser -> {
-                    User user = userRepository.findById(roomUser.getUserId())
-                            .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND_EXCEPTION));
-                    return RoomUserDTO.builder()
-                            .userId(user.getId())
-                            .nickName(user.getNickName())
-                            .build();
-                })
-                .collect(Collectors.toList());
+        List<RoomUserDTO> users = roomSessions.stream()
+            .map(session -> {
+                Long connectedUserId = webRtcWebSocketHandler.getUserIdFromSession(session);
+                User user = userRepository.findById(connectedUserId)
+                    .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND_EXCEPTION));
+                return RoomUserDTO.builder()
+                    .userId(user.getId())
+                    .nickName(user.getNickName())
+                    .build();
+            })
+            .toList();
 
         return RoomUserListDTO.builder()
                 .users(users)
