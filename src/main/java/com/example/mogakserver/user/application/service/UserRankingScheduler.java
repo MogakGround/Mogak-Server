@@ -3,6 +3,8 @@ package com.example.mogakserver.user.application.service;
 import com.example.mogakserver.user.domain.entity.User;
 import com.example.mogakserver.user.infra.repository.JpaUserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -14,6 +16,7 @@ import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserRankingScheduler {
 
     private final JpaUserRepository userRepository;
@@ -66,6 +69,9 @@ public class UserRankingScheduler {
 
     @Scheduled(cron = "0 0 5 * * ?") // 매일 새벽 5시에 랭킹 초기화
     public void cleanupOldRanking() {
+
+        log.info("랭킹정리!!");
         redisTemplate.delete(RANKING_KEY);
+        log.info("랭키정리 성공!!");
     }
 }

@@ -5,6 +5,7 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -40,6 +41,9 @@ public class WebSocketBroadCaster {
                 e.printStackTrace();
             }
         }
+    }
+    public List<WebSocketSession> getSessions(Long roomId) {
+        return roomSessions.getOrDefault(roomId, Collections.emptyList());
     }
 }
 
