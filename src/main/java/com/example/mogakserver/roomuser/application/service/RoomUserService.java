@@ -35,6 +35,7 @@ import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.WebSocketSession;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -222,8 +223,11 @@ public class RoomUserService {
     @Transactional(readOnly = true)
     public RoomUserListDTO getRoomUsers(Long userId, Long roomId) {
         List<WebSocketSession> roomSessions = webRtcWebSocketHandler.getSessionsByRoomId(roomId);
+        List<RoomUserDTO> users = new ArrayList<>();
+        boolean isEmptyRoom = false;
+
         if(roomSessions==null || roomSessions.isEmpty()){
-            throw new NotFoundException(ErrorCode.ROOM_NOT_FOUND_EXCEPTION);
+            isEmptyRoom = true;
         }
         // 본인이 해당 방 참여자인지 검증
         boolean isParticipant = roomSessions.stream()
@@ -233,17 +237,19 @@ public class RoomUserService {
             throw new NotFoundException(ErrorCode.ROOM_PERMISSION_DENIED);
         }
 
-        List<RoomUserDTO> users = roomSessions.stream()
-            .map(session -> {
-                Long connectedUserId = webRtcWebSocketHandler.getUserIdFromSession(session);
-                User user = userRepository.findById(connectedUserId)
-                    .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND_EXCEPTION));
-                return RoomUserDTO.builder()
-                    .userId(user.getId())
-                    .nickName(user.getNickName())
-                    .build();
-            })
-            .toList();
+        if(!isEmptyRoom){
+            users = roomSessions.stream()
+                .map(session -> {
+                    Long connectedUserId = webRtcWebSocketHandler.getUserIdFromSession(session);
+                    User user = userRepository.findById(connectedUserId)
+                        .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND_EXCEPTION));
+                    return RoomUserDTO.builder()
+                        .userId(user.getId())
+                        .nickName(user.getNickName())
+                        .build();
+                })
+                .toList();
+        }
 
         return RoomUserListDTO.builder()
                 .users(users)
