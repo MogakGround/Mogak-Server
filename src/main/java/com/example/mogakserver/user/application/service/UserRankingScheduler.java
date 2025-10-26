@@ -70,8 +70,8 @@ public class UserRankingScheduler {
     @Scheduled(cron = "0 0 5 * * ?") // 매일 새벽 5시에 랭킹 초기화
     public void cleanupOldRanking() {
 
-        log.info("랭킹정리!!");
+        log.info("cleared old ranking");
         redisTemplate.delete(RANKING_KEY);
-        log.info("랭키정리 성공!!");
+        log.info("cleared success!");
     }
 }
