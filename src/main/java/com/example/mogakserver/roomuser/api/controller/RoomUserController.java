@@ -107,7 +107,7 @@ public class RoomUserController {
         return SuccessResponse.success(SuccessCode.GET_ROOMS_I_ENTERED_7DAYS_SUCCESS, roomUserService.get7DaysEnteredRooms(userId, page, size));
     }
 
-    @Operation(summary = "방 들어가기 ", description = "방 들어가기  API입니다")
+    @Operation(summary = "방 들어가기 ", description = "방 들어가기 API입니다")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "방 들어가기 성공입니다.",
                     content = @Content(schema = @Schema(implementation = RoomEnterResponseDTO.class))),
@@ -125,7 +125,7 @@ public class RoomUserController {
             ) {
         return SuccessResponse.success(SuccessCode.ROOM_ENTER_SUCCESS, roomUserService.enterRoom(userId, roomId, request));
     }
-    @Operation(summary = "방 나가기 ", description = "방 나가기  API입니다")
+    @Operation(summary = "방 나가기 ", description = "방 나가기 API입니다")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "방 나가기 성공입니다.",
                     content = @Content(schema = @Schema(implementation = SuccessNonDataResponse.class))),
