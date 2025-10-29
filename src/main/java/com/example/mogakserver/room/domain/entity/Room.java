@@ -40,6 +40,24 @@ public class Room {
         this.roomPassword = Boolean.FALSE.equals(isLocked) ? null : roomPassword;
     }
 
+    public void incrementUserCnt() {
+        if (this.userCnt == null) {
+            this.userCnt = 1;
+        } else {
+            this.userCnt++;
+        }
+    }
+
+    public void decrementUserCnt() {
+        if (this.userCnt != null && this.userCnt > 0) {
+            this.userCnt--;
+        }
+    }
+
+    public void setUserCnt(int userCnt) {
+        this.userCnt = userCnt;
+    }
+
     @CreatedDate
     @Column(updatable = false)
     private LocalDateTime createdAt;
