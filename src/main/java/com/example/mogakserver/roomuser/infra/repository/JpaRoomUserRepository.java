@@ -43,5 +43,8 @@ public interface JpaRoomUserRepository extends JpaRepository<RoomUser, Long> {
 
     int countByRoomId(Long roomId);
 
+    @Query("SELECT COUNT(DISTINCT ru.userId) FROM RoomUser ru WHERE ru.roomId = :roomId")
+    int countDistinctUserIdByRoomId(@Param("roomId") Long roomId);
+
     void deleteByUserIdAndRoomId(Long userId, Long roomId);
 }

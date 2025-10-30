@@ -271,7 +271,14 @@ public class RoomUserService {
 
         validatePassword(request, room);
 
+        boolean isNewUser = !roomUserRepository.existsByRoomIdAndUserId(roomId, userId);
+        
         Long roomUserId = getRoomUserId(userId, roomId, request);
+
+        if (isNewUser) {
+            room.incrementUserCnt();
+            roomRepository.save(room);
+        }
 
         // 화면 공유 상태 저장
         if (request.isScreenShared()) {
@@ -305,8 +312,9 @@ public class RoomUserService {
         Long roomUserId;
         boolean exists = roomUserRepository.existsByRoomIdAndUserId(roomId, userId);
         if (!exists) {
-            int currentUserCnt = roomUserRepository.countByRoomId(roomId);
-            if (currentUserCnt >= 5) {
+            int userCnt = roomUserRepository.countDistinctUserIdByRoomId(roomId);
+            
+            if (userCnt >= 5) {
                 throw new BadRequestException(ErrorCode.ROOM_IS_FULL);
             }
 
@@ -318,15 +326,15 @@ public class RoomUserService {
                     .build();
             roomUserRepository.save(roomUser);
             roomUserId = roomUser.getId();
-        }else{
-            roomUserId = roomUserRepository.findByUserIdAndRoomId(userId, roomId).get().getRoomId();
+        } else{
+            roomUserId = roomUserRepository.findByUserIdAndRoomId(userId, roomId).get().getId();
         }
         return roomUserId;
     }
 
     @Transactional
     public void quitRoom(Long userId, Long roomId) {
-        validateAndGetRoom(userId, roomId);
+        Room room = validateAndGetRoom(userId, roomId);
 
         String timerKey = "timer-room-" + roomId;
         String isRunning = (String) redisTemplate.opsForHash().get(timerKey, userId + "-isRunning");
@@ -346,7 +354,12 @@ public class RoomUserService {
         webSocketBroadcaster.removeSession(roomId, sessionMap.get(userId));
         sessionMap.remove(userId);
 
-        roomUserRepository.deleteByUserIdAndRoomId(userId, roomId);
+        boolean existed = roomUserRepository.existsByRoomIdAndUserId(roomId, userId);
+        if (existed) {
+            roomUserRepository.deleteByUserIdAndRoomId(userId, roomId);
+            room.decrementUserCnt();
+            roomRepository.save(room);
+        }
     }
 }
 
