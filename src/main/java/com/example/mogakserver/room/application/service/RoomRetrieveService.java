@@ -3,6 +3,7 @@ package com.example.mogakserver.room.application.service;
 import com.example.mogakserver.common.exception.enums.ErrorCode;
 import com.example.mogakserver.common.exception.model.ConflictException;
 import com.example.mogakserver.common.exception.model.NotFoundException;
+import com.example.mogakserver.external.socket.WebRtcWebSocketHandler;
 import com.example.mogakserver.room.application.dto.TimerDTO;
 import com.example.mogakserver.room.application.response.RoomDTO;
 import com.example.mogakserver.room.application.response.RoomListDTO;
@@ -25,6 +26,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.socket.WebSocketSession;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -40,6 +42,7 @@ public class RoomRetrieveService {
     private final JpaRoomUserRepository roomUserRepository;
     private final RedisTemplate<String, String> redisTemplate;
     private final JpaUserRepository jpaUserRepository;
+    private final WebRtcWebSocketHandler webRtcWebSocketHandler;
 
     @Transactional(readOnly = true)
     public ScreenShareUsersListDTO getScreenShareUsers(Long roomId, int page, int size) {
@@ -192,12 +195,13 @@ public class RoomRetrieveService {
     }
 
     private RoomDTO toRoomDTO(Long userId, Room room) {
+        List<WebSocketSession> roomSessions = webRtcWebSocketHandler.getSessionsByRoomId(room.getId());
         return RoomDTO.builder()
                 .roomId(room.getId())
                 .roomName(room.getRoomName())
                 .roomExplain(room.getRoomExplain())
                 .isLocked(room.isLocked())
-                .userCnt(room.getUserCnt())
+                .userCnt(roomSessions.size())
                 .roomImg(getRoomImgUrl(room.getId()))
                 .workHours(workTimeRepository.findWorkHoursByRoomId(room.getId()))
                 .isHost(userId != null && isUserHost(userId, room.getId()))
@@ -206,7 +210,7 @@ public class RoomRetrieveService {
 
     private String getRoomImgUrl(Long roomId) {
         RoomImgType roomImgType = roomImgRepository.findRoomImgTypeByRoomId(roomId);
-        return roomImgType.getRoomImgUrl();
+        return roomImgType==null?null:roomImgType.getRoomImgUrl();
     }
 
     private boolean isUserHost(Long userId, Long roomId) {
