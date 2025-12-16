@@ -97,8 +97,8 @@ public class RoomRegisterService {
 
     private boolean isUserHost(Long userId, Long roomId) {
         return roomUserRepository.findByUserIdAndRoomId(userId, roomId)
-                .map(RoomUser::isHost)
-                .orElse(false);
+            .stream()
+            .anyMatch(RoomUser::isHost);
     }
 
     private void validateHostPermission(Long userId, Long roomId) {
