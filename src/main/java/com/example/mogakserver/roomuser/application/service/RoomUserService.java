@@ -154,7 +154,7 @@ public class RoomUserService {
 
 
     @NotNull
-    private static List<MyPageUserRoomDTO> getMyPageRoomDTOs(Page<Room> roomPage, Map<Long, Long> roomTotalTimeMap, Map<Long, String> roomImgMap, Map<Long, List<WorkHour>> workHourMap) {
+    private List<MyPageUserRoomDTO> getMyPageRoomDTOs(Page<Room> roomPage, Map<Long, Long> roomTotalTimeMap, Map<Long, String> roomImgMap, Map<Long, List<WorkHour>> workHourMap) {
         List<MyPageUserRoomDTO> roomDTOList = roomPage.stream()
                 .map(room -> {
                     long totalSeconds = roomTotalTimeMap.getOrDefault(room.getId(), 0L);
@@ -162,6 +162,7 @@ public class RoomUserService {
                     int min = (int) ((totalSeconds % 3600) / 60);
                     int sec = (int) (totalSeconds % 60);
 
+                    List<WebSocketSession> roomSessions = webRtcWebSocketHandler.getSessionsByRoomId(room.getId());
                     return new MyPageUserRoomDTO(
                             room.getId(),
                             room.getRoomName(),
@@ -169,7 +170,7 @@ public class RoomUserService {
                             room.getRoomExplain(),
                             workHourMap.getOrDefault(room.getId(), Collections.emptyList()),
                             room.isLocked(),
-                            room.getUserCnt(),
+                            roomSessions.size(),
                             room.getRoomPassword(),
                             hour, min, sec
                     );
