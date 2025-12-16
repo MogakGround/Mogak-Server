@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface JpaRoomUserRepository extends JpaRepository<RoomUser, Long> {
-    Optional<RoomUser> findByUserIdAndRoomId(Long userId, Long roomId);
+    List<RoomUser> findByUserIdAndRoomId(Long userId, Long roomId);
     List<RoomUser> findByRoomId(Long roomId);
 
     void deleteByRoomId(Long roomId);

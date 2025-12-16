@@ -215,8 +215,8 @@ public class RoomRetrieveService {
 
     private boolean isUserHost(Long userId, Long roomId) {
         return roomUserRepository.findByUserIdAndRoomId(userId, roomId)
-                .map(RoomUser::isHost)
-                .orElse(false);
+            .stream()
+            .anyMatch(RoomUser::isHost);
     }
 
     public void isRoomNameAvailable(String roomName) {

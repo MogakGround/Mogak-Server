@@ -37,6 +37,7 @@ import org.springframework.web.socket.WebSocketSession;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,7 +64,15 @@ public class RoomUserService {
     private final WebRtcWebSocketHandler webRtcWebSocketHandler;
 
     public void updateIsScreenShareLargeAllowed(Long userId, Long roomId){
-        RoomUser roomUser = roomUserRepository.findByUserIdAndRoomId(userId, roomId).orElseThrow(()->new NotFoundException(ErrorCode.NOT_FOUND_ROOM_EXCEPTION));
+        List<RoomUser> roomUsers = roomUserRepository.findByUserIdAndRoomId(userId, roomId);
+
+        if (roomUsers.isEmpty()) {
+            throw new NotFoundException(ErrorCode.NOT_FOUND_ROOM_EXCEPTION);
+        }
+
+        RoomUser roomUser = roomUsers.stream()
+            .max(Comparator.comparing(RoomUser::getCreatedAt))
+            .orElseThrow(() -> new NotFoundException(ErrorCode.NOT_FOUND_ROOM_EXCEPTION));
         roomUser.updateIsVideoLargeAllowed();
     }
     @Transactional(readOnly = true)
@@ -83,7 +92,15 @@ public class RoomUserService {
 
         boolean isScreenSharing = redisTemplate.opsForSet().isMember(screenShareKey, String.valueOf(userId));
 
-        RoomUser roomUser = roomUserRepository.findByUserIdAndRoomId(userId, roomId).orElseThrow(()->new NotFoundException(ErrorCode.NOT_FOUND_ROOM_EXCEPTION));
+        List<RoomUser> roomUsers = roomUserRepository.findByUserIdAndRoomId(userId, roomId);
+
+        if (roomUsers.isEmpty()) {
+            throw new NotFoundException(ErrorCode.NOT_FOUND_ROOM_EXCEPTION);
+        }
+
+        RoomUser roomUser = roomUsers
+            .stream().max(Comparator.comparing(RoomUser::getCreatedAt))
+            .orElseThrow(() -> new NotFoundException(ErrorCode.NOT_FOUND_ROOM_EXCEPTION));
 
         return MyStatusResponseDTO.builder()
                 .nickName(nickName)
@@ -154,7 +171,7 @@ public class RoomUserService {
 
 
     @NotNull
-    private static List<MyPageUserRoomDTO> getMyPageRoomDTOs(Page<Room> roomPage, Map<Long, Long> roomTotalTimeMap, Map<Long, String> roomImgMap, Map<Long, List<WorkHour>> workHourMap) {
+    private List<MyPageUserRoomDTO> getMyPageRoomDTOs(Page<Room> roomPage, Map<Long, Long> roomTotalTimeMap, Map<Long, String> roomImgMap, Map<Long, List<WorkHour>> workHourMap) {
         List<MyPageUserRoomDTO> roomDTOList = roomPage.stream()
                 .map(room -> {
                     long totalSeconds = roomTotalTimeMap.getOrDefault(room.getId(), 0L);
@@ -162,6 +179,7 @@ public class RoomUserService {
                     int min = (int) ((totalSeconds % 3600) / 60);
                     int sec = (int) (totalSeconds % 60);
 
+                    List<WebSocketSession> roomSessions = webRtcWebSocketHandler.getSessionsByRoomId(room.getId());
                     return new MyPageUserRoomDTO(
                             room.getId(),
                             room.getRoomName(),
@@ -169,7 +187,7 @@ public class RoomUserService {
                             room.getRoomExplain(),
                             workHourMap.getOrDefault(room.getId(), Collections.emptyList()),
                             room.isLocked(),
-                            room.getUserCnt(),
+                            roomSessions.size(),
                             room.getRoomPassword(),
                             hour, min, sec
                     );
@@ -327,7 +345,9 @@ public class RoomUserService {
             roomUserRepository.save(roomUser);
             roomUserId = roomUser.getId();
         } else{
-            roomUserId = roomUserRepository.findByUserIdAndRoomId(userId, roomId).get().getId();
+            List<RoomUser> roomUsers = roomUserRepository.findByUserIdAndRoomId(userId, roomId);
+            RoomUser roomUser = roomUsers.get(0);
+            roomUserId = roomUser.getId();
         }
         return roomUserId;
     }
