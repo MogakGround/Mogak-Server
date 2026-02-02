@@ -247,13 +247,7 @@ public class RoomUserService {
         if(roomSessions==null || roomSessions.isEmpty()){
             isEmptyRoom = true;
         }
-        // 본인이 해당 방 참여자인지 검증
-        boolean isParticipant = roomSessions.stream()
-            .anyMatch(session -> userId.equals(webRtcWebSocketHandler.getUserIdFromSession(session)));
 
-        if (!isParticipant) {
-            throw new NotFoundException(ErrorCode.ROOM_PERMISSION_DENIED);
-        }
 
         if(!isEmptyRoom){
             users = roomSessions.stream()
